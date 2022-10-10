@@ -1,4 +1,8 @@
-# Usage
+# C++ to drive EnergyPlus
+
+## Usage
+
+This uses my branch: https://github.com/NREL/EnergyPlus/tree/export_energyplusapi
 
 ```shell
 conan install . -pr:b=default -b missing -if build/ -of build
