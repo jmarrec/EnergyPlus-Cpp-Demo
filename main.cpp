@@ -47,7 +47,11 @@ std::string formatError(EnergyPlus::Error error) {
 
 int main(int argc, const char* argv[]) {
 
+  // This is a compile definition
+  fmt::print("{}\n", ENERGYPLUS_ROOT);
+
   EnergyPlusState state = stateNew();
+  setEnergyPlusRootDirectory(state, ENERGYPLUS_ROOT);
 
   callbackBeginNewEnvironment(state, BeginNewEnvironmentHandler);
   registerProgressCallback(state, progressHandler);

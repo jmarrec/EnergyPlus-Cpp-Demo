@@ -170,6 +170,8 @@ add_custom_command(
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/WeatherData/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw" "$<TARGET_FILE_DIR:test>/in.epw"
 )
 
+target_compile_definitions(test PRIVATE ENERGYPLUS_ROOT="$<TARGET_FILE_DIR:energyplus::energyplusapi>")
+
 # enable_testing()
 # include(GoogleTest)
 # gtest_discover_tests(testlib_tests
