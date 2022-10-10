@@ -1,0 +1,6 @@
+[requires]
+fmt/9.1.0@#78313935d914fe65715ad39687445de6
+
+[generators]
+CMakeToolchain
+CMakeDeps
