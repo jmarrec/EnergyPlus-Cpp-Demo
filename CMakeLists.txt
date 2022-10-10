@@ -165,6 +165,9 @@ add_custom_command(
   # TODO: WORKAROUND
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libpython3.8.dylib" "$<TARGET_FILE_DIR:test>"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libintl.8.dylib" "$<TARGET_FILE_DIR:test>"
+  # Example files to play with
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/ExampleFiles/1ZoneUncontrolled.idf" "$<TARGET_FILE_DIR:test>/in.idf"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/WeatherData/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw" "$<TARGET_FILE_DIR:test>/in.epw"
 )
 
 # enable_testing()
