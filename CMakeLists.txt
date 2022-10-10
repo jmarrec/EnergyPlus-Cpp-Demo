@@ -140,7 +140,7 @@ find_package(fmt REQUIRED)
 #                             E N E R G Y P L U S                             #
 ###############################################################################
 
-find_package(energyplus REQUIRED PATHS /Users/julien/Software/Others/EnergyPlus-build-release/_CPack_Packages/Darwin/TGZ/EnergyPlus-22.2.0-5b72c372e7-Darwin-macOS12.1-arm64/lib/cmake/energyplus)
+find_package(energyplus REQUIRED)
 message("energyplus=${energyplus}")
 
 ###############################################################################
