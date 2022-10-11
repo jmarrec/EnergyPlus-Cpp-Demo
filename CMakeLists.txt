@@ -135,6 +135,7 @@ message("PROJECT_BINARY_DIR=${PROJECT_BINARY_DIR}")
 include_directories(${PROJECT_BINARY_DIR})
 
 find_package(fmt REQUIRED)
+find_package(ftxui REQUIRED)
 
 ###############################################################################
 #                             E N E R G Y P L U S                             #
@@ -155,6 +156,9 @@ target_link_libraries(test
   PRIVATE
   project_options
   fmt::fmt
+  ftxui::screen
+  ftxui::dom
+  ftxui::component
   energyplus::energyplusapi
 )
 
