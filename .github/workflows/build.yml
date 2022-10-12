@@ -102,8 +102,9 @@ jobs:
         echo "ENERGYPLUS_DIR=$(pwd)/$EPLUS_INSTALLER_NAME" >> $GITHUB_ENV
 
     - name: conan install CMakeToolChain
+      # On windows, gotta specify we want generator=Ninja
       run: |
-        conan install . -pr:b=default -b missing -if build/ -of build/
+        conan install . -pr:b=default -b missing -if build/ -of build/ -c tools.cmake.cmaketoolchain:generator=Ninja
 
     - name: CMake configure (Unix)
       working-directory: ./build
@@ -121,10 +122,10 @@ jobs:
     - name: CMake configure (Windows)
       working-directory: ./build
       if: runner.os == 'Windows'
-      shell: bash
       run: |
-        set -x
-        cmake -DCMAKE_TOOLCHAIN_FILE=$(pwd)/conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release \
+        echo "Using vcvarsall to initialize the development environment"
+        call vcvarsall.bat x64
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release \
               -Denergyplus_DIR=${{ env.ENERGYPLUS_DIR }} \
               -DCPACK_BINARY_IFW:BOOL=ON  -DCPACK_BINARY_TGZ:BOOL=ON \
               -DCPACK_BINARY_RPM:BOOL=OFF -DCPACK_BINARY_DEB:BOOL=OFF -DCPACK_BINARY_NSIS:BOOL=OFF \
@@ -133,19 +134,10 @@ jobs:
 
     - name: Build (Unix)
       working-directory: ./build
-      if: runner.os != 'Windows'
       shell: bash
       run: |
         set -x
         ninja package
-
-    - name: Build (Windows)
-      working-directory: ./build
-      if: runner.os == 'Windows'
-      shell: bash
-      run: |
-        set -x
-        cmake --build . --target package
 
     - name: Archive binary artifacts
       uses: actions/upload-artifact@v3
