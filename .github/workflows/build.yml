@@ -52,7 +52,9 @@ jobs:
           conan config set general.revisions_enabled=True
           conan config set general.parallel_download=8
           conan profile new --detect default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            conan profile update settings.compiler.libcxx=libstdc++11 default
+          fi;
 
     - name: Install deps
       shell: bash
