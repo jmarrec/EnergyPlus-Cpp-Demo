@@ -122,6 +122,7 @@ jobs:
     - name: CMake configure (Windows)
       working-directory: ./build
       if: runner.os == 'Windows'
+      shell: cmd
       run: |
         echo "Using vcvarsall to initialize the development environment"
         call vcvarsall.bat x64
