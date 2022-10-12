@@ -45,7 +45,7 @@ jobs:
 
     - name: Upload cppcheck results as artifact
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
           name: EnergyPlus-Cpp-Demo-${{ github.sha }}-cppcheck_results.txt
           path: cppcheck.txt
