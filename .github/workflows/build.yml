@@ -57,6 +57,7 @@ jobs:
     - name: Install deps
       shell: bash
       run: |
+        set -x
         mkdir build
 
         cd build
@@ -78,7 +79,7 @@ jobs:
           echo "SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" >> $GITHUB_ENV
 
           EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Darwin-macOS10.15-x86_64
-          EPLUS_INSALLER_EXT=zip
+          EPLUS_INSALLER_EXT=tar.gz
 
         elif [ "$RUNNER_OS" == "Window" ]; then
           choco install ninja
@@ -94,7 +95,7 @@ jobs:
         fi;
 
         curl -L -O ${{ env.ENERGYPLUS_RELEASE_ENDPOINT }}/$EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
-        tar xfz $EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
+        cmake -E tar xfz $EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
         echo "ENERGYPLUS_DIR=$(pwd)/$EPLUS_INSTALLER_NAME" >> $GITHUB_ENV
 
     - name: conan install CMakeToolChain
