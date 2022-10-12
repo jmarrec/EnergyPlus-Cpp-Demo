@@ -150,15 +150,27 @@ message("energyplus=${energyplus}")
 
 
 add_executable(epcli
-  main.cpp
+  src/main.cpp
+  src/MainComponent.hpp
+  src/MainComponent.cpp
+
+  src/AboutComponent.hpp
+  src/AboutComponent.cpp
+
+  src/LogDisplayer.hpp
+  src/LogDisplayer.cpp
+
+  src/ErrorMessage.hpp
+  src/ErrorMessage.cpp
 )
 target_link_libraries(epcli
   PRIVATE
   project_options
   fmt::fmt
-  ftxui::screen
-  ftxui::dom
-  ftxui::component
+  # ftxui::screen
+  # ftxui::dom
+  # ftxui::component
+  ftxui::ftxui
   energyplus::energyplusapi
 )
 
