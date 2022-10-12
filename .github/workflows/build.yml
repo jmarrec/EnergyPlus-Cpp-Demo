@@ -106,7 +106,7 @@ jobs:
       run: |
         conan install . -pr:b=default -b missing -if build/ -of build/ -c tools.cmake.cmaketoolchain:generator=Ninja
 
-    - name: CMake configure (Unix)
+    - name: CMake configure and build (Unix)
       working-directory: ./build
       if: runner.os != 'Windows'
       shell: bash
@@ -118,8 +118,9 @@ jobs:
               -DCPACK_BINARY_RPM:BOOL=OFF -DCPACK_BINARY_DEB:BOOL=OFF -DCPACK_BINARY_NSIS:BOOL=OFF \
               -DCPACK_BINARY_STGZ:BOOL=OFF -DCPACK_BINARY_TBZ2:BOOL=OFF -DCPACK_BINARY_TXZ:BOOL=OFF -DCPACK_BINARY_TZ:BOOL=OFF \
               ../
+        ninja package
 
-    - name: CMake configure (Windows)
+    - name: CMake configure and build (Windows)
       working-directory: ./build
       if: runner.os == 'Windows'
       shell: cmd
@@ -132,12 +133,6 @@ jobs:
               -DCPACK_BINARY_RPM:BOOL=OFF -DCPACK_BINARY_DEB:BOOL=OFF -DCPACK_BINARY_NSIS:BOOL=OFF ^
               -DCPACK_BINARY_STGZ:BOOL=OFF -DCPACK_BINARY_TBZ2:BOOL=OFF -DCPACK_BINARY_TXZ:BOOL=OFF -DCPACK_BINARY_TZ:BOOL=OFF ^
               ../
-
-    - name: Build (Unix)
-      working-directory: ./build
-      shell: bash
-      run: |
-        set -x
         ninja package
 
     - name: Archive binary artifacts
