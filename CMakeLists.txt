@@ -194,6 +194,10 @@ if(WIN32)
   set(LIB_DESTINATION_DIR "bin")
 endif()
 
+install(FILES "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.8.dylib>$<$<PLATFORM_ID:Linux>:libpython3.8.so.1.0>$<$<PLATFORM_ID:Windows>:python38.dll>" DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
+
+install(TARGETS epcli DESTINATION bin COMPONENT "CLI")
+
 if(APPLE)
   set_target_properties(epcli PROPERTIES
     INSTALL_RPATH "@executable_path;@executable_path/../lib/"
@@ -211,10 +215,6 @@ elseif(UNIX)
   set_target_properties(epcli PROPERTIES
     INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib/")
 endif()
-
-install(FILES "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.8.dylib>$<$<PLATFORM_ID:Linux>:libpython3.8.so.1.0>$<$<PLATFORM_ID:Windows>:python38.dll>" DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
-
-install(TARGETS epcli DESTINATION bin COMPONENT "CLI")
 
 install(IMPORTED_RUNTIME_ARTIFACTS energyplus::energyplusapi LIBRARY DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
 
