@@ -124,26 +124,28 @@ jobs:
       shell: bash
       run: |
         set -x
-        cmake -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release \
+        cmake -DCMAKE_TOOLCHAIN_FILE=$(pwd)/conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release \
               -Denergyplus_DIR=${{ env.ENERGYPLUS_DIR }} \
               -DCPACK_BINARY_IFW:BOOL=ON  -DCPACK_BINARY_TGZ:BOOL=ON \
               -DCPACK_BINARY_RPM:BOOL=OFF -DCPACK_BINARY_DEB:BOOL=OFF -DCPACK_BINARY_NSIS:BOOL=OFF \
               -DCPACK_BINARY_STGZ:BOOL=OFF -DCPACK_BINARY_TBZ2:BOOL=OFF -DCPACK_BINARY_TXZ:BOOL=OFF -DCPACK_BINARY_TZ:BOOL=OFF \
               ../
 
-    - name: Build
+    - name: Build (Unix)
       working-directory: ./build
-      shell: bash
-      run: |
-        set -x
-        ninja
-
-    - name: Build package
-      working-directory: ./build
+      if: runner.os != 'Windows'
       shell: bash
       run: |
         set -x
         ninja package
+
+    - name: Build (Windows)
+      working-directory: ./build
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        set -x
+        cmake --build . --target package
 
     - name: Archive binary artifacts
       uses: actions/upload-artifact@v3
