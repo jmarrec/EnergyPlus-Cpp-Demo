@@ -44,6 +44,7 @@ jobs:
         qtifw-version: '4.x'
 
     - name: Install conan
+      shell: bash
       run: |
           python --version
           pip install conan
