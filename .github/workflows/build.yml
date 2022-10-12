@@ -1,0 +1,154 @@
+name: C++ CI
+
+on:
+  push:
+    branches: [ main ]
+    # Sequence of patterns matched against refs/tags
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+  pull_request:
+    branches: [ main ]
+
+env:
+  ENERGYPLUS_RELEASE_ENDPOINT: https://github.com/jmarrec/EnergyPlus/releases/download/v22.2.0-export
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # fail-fast: Default is true, switch to false to allow one platform to fail and still run others
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, macos-latest, windows-latest],
+        include:
+        - os: ubuntu-20.04
+          PLATFORM_NAME: Linux
+          BINARY_EXT: run
+        - os: macos-latest
+          PLATFORM_NAME: Darwin
+          BINARY_EXT: dmg
+        - os: macos-latest
+          PLATFORM_NAME: win64
+          BINARY_EXT: exe
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - uses: actions/setup-python@v3
+      with:
+        python-version: '3.8'
+
+    - name: Install conan
+      run: |
+          python --version
+          conan --version
+          echo "Enabling conan revisions and setting parallel_download"
+          conan config set general.revisions_enabled=True
+          conan config set general.parallel_download=8
+          conan user
+
+    - name: Install deps
+      shell: bash
+      run: |
+        mkdir build
+
+        cd build
+
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          echo "Using apt to install ninja"
+          sudo apt update
+          sudo apt -y -qq install ninja-build
+
+          EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Linux-Ubuntu20.04-x86_64
+          EPLUS_INSALLER_EXT=tar.gz
+
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          echo "Using brew to install ninja"
+          brew install ninja
+          echo "Setting MACOSX_DEPLOYMENT_TARGET to 10.15"
+          echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> $GITHUB_ENV
+          echo "Adding SDKROOT to GITHUB_ENV"
+          echo "SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" >> $GITHUB_ENV
+
+          EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Darwin-macOS10.15-x86_64
+          EPLUS_INSALLER_EXT=zip
+
+        elif [ "$RUNNER_OS" == "Window" ]; then
+          choco install ninja
+          # C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
+          MSVC_DIR=$(cmd.exe /c "vswhere -products * -requires Microsoft.Component.MSBuild -property installationPath -latest")
+          echo "Latest is: $MSVC_DIR"
+          echo "MSVC_DIR=$MSVC_DIR" >> $GITHUB_ENV
+          # add folder containing vcvarsall.bat
+          echo "$MSVC_DIR\VC\Auxiliary\Build" >> $GITHUB_PATH
+
+          EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Windows-x86_64
+          EPLUS_INSALLER_EXT=zip
+        fi;
+
+        curl -L -O ${{ env.ENERGYPLUS_RELEASE_ENDPOINT }}/$EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
+        tar xfz $EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
+        echo "ENERGYPLUS_DIR=$(pwd)/$EPLUS_INSTALLER_NAME" >> $GITHUB_ENV
+
+    - name: conan install CMakeToolChain
+      run: |
+        conan install . -pr:b=default -b missing -if build/ -of build/
+
+    - name: CMake configure (Unix)
+      working-directory: ./build
+      shell: bash
+      run: |
+        set -x
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release \
+              -Denergyplus_DIR=${{ env.ENERGYPLUS_DIR }}
+              -DCPACK_BINARY_IFW:BOOL=ON  -DCPACK_BINARY_TGZ:BOOL=ON \
+              -DCPACK_BINARY_RPM:BOOL=OFF -DCPACK_BINARY_DEB:BOOL=OFF -DCPACK_BINARY_NSIS:BOOL=OFF \
+              -DCPACK_BINARY_STGZ:BOOL=OFF -DCPACK_BINARY_TBZ2:BOOL=OFF -DCPACK_BINARY_TXZ:BOOL=OFF -DCPACK_BINARY_TZ:BOOL=OFF \
+              ../
+
+    - name: Build
+      working-directory: ./build
+      shell: bash
+      run: |
+        set -x
+        ninja
+
+    - name: Build package
+      working-directory: ./build
+      shell: bash
+      run: |
+        set -x
+        ninja package
+
+    - name: Archive binary artifacts
+      uses: actions/upload-artifact@v2
+      with:
+          name: EnergyPlus-Cpp-Demo-{{ github.sha }}-${{ matrix.os }}.${{ matrix.BINARY_EXT }}
+          path: build/_CPack_Packages/${{ matrix.PLATFORM_NAME }}/IFW/*.${{ matrix.BINARY_EXT }}
+
+    - name: Archive TGZ artifacts
+      uses: actions/upload-artifact@v2
+      with:
+          name: EnergyPlus-Cpp-Demo-{{ github.sha }}-${{ matrix.os }}.tar.gz
+          path: build/_CPack_Packages/${{ matrix.PLATFORM_NAME }}/IFW/*.tar.gz
+
+    - name: Upload Binary installer to release
+      if: contains(github.ref, 'refs/tags')
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: build/_CPack_Packages/${{ matrix.PLATFORM_NAME }}/IFW/*.${{ matrix.BINARY_EXT }}
+        tag: ${{ github.ref }}
+        overwrite: true
+        file_glob: true
+
+    - name: Upload TGZ installer to release
+      if: contains(github.ref, 'refs/tags')
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: build/_CPack_Packages/${{ matrix.PLATFORM_NAME }}/IFW/*.tar.gz
+        tag: ${{ github.ref }}
+        overwrite: true
+        file_glob: true
+
