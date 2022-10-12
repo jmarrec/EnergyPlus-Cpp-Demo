@@ -194,7 +194,15 @@ if(WIN32)
   set(LIB_DESTINATION_DIR "bin")
 endif()
 
+get_target_property(LIBAPI energyplus::energyplusapi IMPORTED_LOCATION_RELEASE)
+
 install(FILES "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.8.dylib>$<$<PLATFORM_ID:Linux>:libpython3.8.so.1.0>$<$<PLATFORM_ID:Windows>:python38.dll>" DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
+
+
+add_custom_target(genexdebug COMMAND ${CMAKE_COMMAND} -E echo "$<TARGET_FILE_NAME:energyplus::energyplusapi>")
+
+#install(IMPORTED_RUNTIME_ARTIFACTS energyplus::energyplusapi LIBRARY DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
+install(FILES ${LIBAPI} DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
 
 install(TARGETS epcli DESTINATION bin COMPONENT "CLI")
 
@@ -206,7 +214,7 @@ if(APPLE)
   install(FILES "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libintl.8.dylib" DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
 
   install(CODE [[
-    execute_process(COMMAND "install_name_tool" -change "$<TARGET_FILE:energyplus::energyplusapi>" "@rpath/$<TARGET_FILE_NAME:energyplus::energyplusapi>" "${CMAKE_INSTALL_PREFIX}/bin/$<TARGET_FILE_NAME:epcli>")
+    execute_process(COMMAND "install_name_tool" -change "$<TARGET_PROPERTY:energyplus::energyplusapi,IMPORTED_SONAME_RELEASE>" "@rpath/$<TARGET_FILE_NAME:energyplus::energyplusapi>" "${CMAKE_INSTALL_PREFIX}/bin/$<TARGET_FILE_NAME:epcli>")
   ]]
     COMPONENT "CLI"
   )
@@ -216,6 +224,5 @@ elseif(UNIX)
     INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib/")
 endif()
 
-install(IMPORTED_RUNTIME_ARTIFACTS energyplus::energyplusapi LIBRARY DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
 
 include(CPack)
