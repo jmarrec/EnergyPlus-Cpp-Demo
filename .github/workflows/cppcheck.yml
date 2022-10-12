@@ -38,7 +38,7 @@ jobs:
             --enable=all \
             --template='[{file}:{line}]:({severity}),[{id}],{message}' \
             --force -q -j $(nproc) \
-            ./src 2>&1 | tee cppcheck.txt
+            ./ 2>&1 | tee cppcheck.txt
 
     - name: Parse and colorize cppcheck
       shell: bash

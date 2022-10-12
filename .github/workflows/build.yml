@@ -19,7 +19,7 @@ jobs:
       # fail-fast: Default is true, switch to false to allow one platform to fail and still run others
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-latest, windows-latest],
+        os: [ubuntu-20.04, macos-latest, windows-latest]
         include:
         - os: ubuntu-20.04
           PLATFORM_NAME: Linux
@@ -41,6 +41,7 @@ jobs:
     - name: Install conan
       run: |
           python --version
+          pip install conan
           conan --version
           echo "Enabling conan revisions and setting parallel_download"
           conan config set general.revisions_enabled=True
