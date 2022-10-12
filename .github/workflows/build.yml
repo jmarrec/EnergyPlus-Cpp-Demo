@@ -46,7 +46,8 @@ jobs:
           echo "Enabling conan revisions and setting parallel_download"
           conan config set general.revisions_enabled=True
           conan config set general.parallel_download=8
-          conan user
+          conan profile new --detect default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
 
     - name: Install deps
       shell: bash
