@@ -137,9 +137,9 @@ int main(int argc, const char* argv[]) {
   auto runOutput_component = ftxui::Renderer([renderer_runOutput] { return renderer_runOutput(); });
 */
 
-  auto menu = ftxui::Menu(&runOutputText, &selected_runOutputLine);
+  auto runOutputMenu = ftxui::Menu(&runOutputText, &selected_runOutputLine);
 
-  auto my_custom_menu = ftxui::Renderer(menu, [&] {
+  auto render_runOutputMenu = ftxui::Renderer(runOutputMenu, [&] {
     int begin = std::max(0, selected_runOutputLine - 10);
     int end = std::min(static_cast<int>(runOutputText.size()), selected_runOutputLine + 10);
     ftxui::Elements elements;
@@ -159,7 +159,7 @@ int main(int argc, const char* argv[]) {
   auto container = ftxui::Container::Vertical({
     firstrow,
     gauge_component,
-    menu,
+    runOutputMenu,
   });
 
   auto renderer = ftxui::Renderer(container, [&] {
@@ -172,7 +172,8 @@ int main(int argc, const char* argv[]) {
              ftxui::separator(),
              render_gauge(),
              ftxui::separator(),
-             my_custom_menu->Render(),
+             ftxui::text("Stdout"),
+             render_runOutputMenu->Render(),
            })
            | ftxui::border;
   });

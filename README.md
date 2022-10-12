@@ -1,5 +1,7 @@
 # C++ to drive EnergyPlus
 
+![demo GIF](EnergyPlus-Cpp-Demo.gif)
+
 ## Usage
 
 This uses my branch: https://github.com/NREL/EnergyPlus/tree/export_energyplusapi
