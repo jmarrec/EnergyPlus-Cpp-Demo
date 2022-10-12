@@ -38,6 +38,11 @@ jobs:
       with:
         python-version: '3.8'
 
+    - name: Setup QtIFW 4.x
+      uses: jmarrec/setup-qtifw@v1
+      with:
+        qtifw-version: '4.x'
+
     - name: Install conan
       run: |
           python --version
