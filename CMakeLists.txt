@@ -163,12 +163,18 @@ add_custom_command(
   PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:energyplus::energyplusapi>" "$<TARGET_FILE_DIR:test>"
   # TODO: WORKAROUND
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libpython3.8.dylib" "$<TARGET_FILE_DIR:test>"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libintl.8.dylib" "$<TARGET_FILE_DIR:test>"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.8.dylib>$<$<PLATFORM_ID:Linux>:libpython3.8.so.1.0>$<$<PLATFORM_ID:Windows>:python38.dll>" "$<TARGET_FILE_DIR:test>"
   # Example files to play with
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/ExampleFiles/1ZoneUncontrolled.idf" "$<TARGET_FILE_DIR:test>/in.idf"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/WeatherData/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw" "$<TARGET_FILE_DIR:test>/in.epw"
 )
+if(APPLE)
+  add_custom_command(
+    TARGET test
+    PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libintl.8.dylib" "$<TARGET_FILE_DIR:test>"
+  )
+endif()
 
 target_compile_definitions(test PRIVATE ENERGYPLUS_ROOT="$<TARGET_FILE_DIR:energyplus::energyplusapi>")
 
