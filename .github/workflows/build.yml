@@ -83,7 +83,7 @@ jobs:
           EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Darwin-macOS10.15-x86_64
           EPLUS_INSALLER_EXT=tar.gz
 
-        elif [ "$RUNNER_OS" == "Window" ]; then
+        elif [ "$RUNNER_OS" == "Windows" ]; then
           choco install ninja
           # C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
           MSVC_DIR=$(cmd.exe /c "vswhere -products * -requires Microsoft.Component.MSBuild -property installationPath -latest")
