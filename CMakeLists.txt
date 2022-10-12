@@ -13,7 +13,7 @@ if(CCACHE_PROGRAM)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
 endif()
 
-project(TestCppCoverage VERSION 0.0.1)
+project(EnergyPlus-Cpp-Demo VERSION 0.0.1)
 
 # The PROJECT_SOURCE_DIR here is root of this repo, which we will use instead of using CMAKE_SOURCE_DIR
 set(PROJECT_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
@@ -149,10 +149,10 @@ message("energyplus=${energyplus}")
 ###############################################################################
 
 
-add_executable(test
+add_executable(epcli
   main.cpp
 )
-target_link_libraries(test
+target_link_libraries(epcli
   PRIVATE
   project_options
   fmt::fmt
@@ -163,27 +163,59 @@ target_link_libraries(test
 )
 
 add_custom_command(
-  TARGET test
+  TARGET epcli
   PRE_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:energyplus::energyplusapi>" "$<TARGET_FILE_DIR:test>"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:energyplus::energyplusapi>" "$<TARGET_FILE_DIR:epcli>"
   # TODO: WORKAROUND
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.8.dylib>$<$<PLATFORM_ID:Linux>:libpython3.8.so.1.0>$<$<PLATFORM_ID:Windows>:python38.dll>" "$<TARGET_FILE_DIR:test>"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.8.dylib>$<$<PLATFORM_ID:Linux>:libpython3.8.so.1.0>$<$<PLATFORM_ID:Windows>:python38.dll>" "$<TARGET_FILE_DIR:epcli>"
   # Example files to play with
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/ExampleFiles/1ZoneUncontrolled.idf" "$<TARGET_FILE_DIR:test>/in.idf"
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/WeatherData/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw" "$<TARGET_FILE_DIR:test>/in.epw"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/ExampleFiles/1ZoneUncontrolled.idf" "$<TARGET_FILE_DIR:epcli>/in.idf"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/WeatherData/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw" "$<TARGET_FILE_DIR:epcli>/in.epw"
 )
 if(APPLE)
   add_custom_command(
     TARGET test
     PRE_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libintl.8.dylib" "$<TARGET_FILE_DIR:test>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libintl.8.dylib" "$<TARGET_FILE_DIR:epcli>"
   )
 endif()
 
-target_compile_definitions(test PRIVATE ENERGYPLUS_ROOT="$<TARGET_FILE_DIR:energyplus::energyplusapi>")
+target_compile_definitions(epcli PRIVATE ENERGYPLUS_ROOT="$<TARGET_FILE_DIR:energyplus::energyplusapi>")
 
 # enable_testing()
 # include(GoogleTest)
 # gtest_discover_tests(testlib_tests
 #   # WORKING_DIRECTORY Testing
 # )
+
+set(LIB_DESTINATION_DIR "lib")
+if(WIN32)
+  # No Rpaths on Windows
+  set(LIB_DESTINATION_DIR "bin")
+endif()
+
+if(APPLE)
+  set_target_properties(epcli PROPERTIES
+    INSTALL_RPATH "@executable_path;@executable_path/../lib/"
+  )
+
+  install(FILES "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libintl.8.dylib" DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
+
+  install(CODE [[
+    execute_process(COMMAND "install_name_tool" -change "$<TARGET_FILE:energyplus::energyplusapi>" "@rpath/$<TARGET_FILE_NAME:energyplus::energyplusapi>" "${CMAKE_INSTALL_PREFIX}/lib/$<TARGET_FILE_NAME:epcli>")
+  ]]
+    COMPONENT "CLI"
+  )
+
+elseif(UNIX)
+  set_target_properties(epcli PROPERTIES
+    INSTALL_RPATH "$ORIGIN:$ORIGIN/../lib/")
+endif()
+
+install(FILES "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.8.dylib>$<$<PLATFORM_ID:Linux>:libpython3.8.so.1.0>$<$<PLATFORM_ID:Windows>:python38.dll>" DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
+
+install(TARGETS epcli DESTINATION bin COMPONENT "CLI")
+
+install(IMPORTED_RUNTIME_ARTIFACTS energyplus::energyplusapi LIBRARY DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
+
+include(CPack)
