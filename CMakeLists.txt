@@ -202,7 +202,7 @@ if(APPLE)
   install(FILES "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libintl.8.dylib" DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
 
   install(CODE [[
-    execute_process(COMMAND "install_name_tool" -change "$<TARGET_FILE:energyplus::energyplusapi>" "@rpath/$<TARGET_FILE_NAME:energyplus::energyplusapi>" "${CMAKE_INSTALL_PREFIX}/lib/$<TARGET_FILE_NAME:epcli>")
+    execute_process(COMMAND "install_name_tool" -change "$<TARGET_FILE:energyplus::energyplusapi>" "@rpath/$<TARGET_FILE_NAME:energyplus::energyplusapi>" "${CMAKE_INSTALL_PREFIX}/bin/$<TARGET_FILE_NAME:epcli>")
   ]]
     COMPONENT "CLI"
   )
