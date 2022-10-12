@@ -174,7 +174,7 @@ add_custom_command(
 )
 if(APPLE)
   add_custom_command(
-    TARGET test
+    TARGET epcli
     PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/libintl.8.dylib" "$<TARGET_FILE_DIR:epcli>"
   )
