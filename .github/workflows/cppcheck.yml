@@ -18,8 +18,7 @@ jobs:
           # Current stable (2.3-25-20201207-23616-ga9f4a14c8, rev 1637) is broken, so use edge for now
           # cppcheck has been removed completely from snap actually
           # sudo snap install cppcheck --edge
-          mkdir cppcheck
-          cd cppcheck
+          cd /tmp/
           wget https://github.com/danmar/cppcheck/archive/2.5.tar.gz
           tar xfz 2.5.tar.gz
           mkdir build

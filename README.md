@@ -1,5 +1,9 @@
 # C++ to drive EnergyPlus
 
+[![C++ CI](https://github.com/jmarrec/EnergyPlus-Cpp-Demo/actions/workflows/build.yml/badge.svg)](https://github.com/jmarrec/EnergyPlus-Cpp-Demo/actions/workflows/build.yml)
+[![clang-format](https://github.com/jmarrec/EnergyPlus-Cpp-Demo/actions/workflows/clang-format-check.yml/badge.svg)](https://github.com/jmarrec/EnergyPlus-Cpp-Demo/actions/workflows/clang-format-check.yml)
+[![cppcheck](https://github.com/jmarrec/EnergyPlus-Cpp-Demo/actions/workflows/cppcheck.yml/badge.svg)](https://github.com/jmarrec/EnergyPlus-Cpp-Demo/actions/workflows/cppcheck.yml)
+
 ![demo GIF](EnergyPlus-Cpp-Demo.gif)
 
 ## Usage
