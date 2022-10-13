@@ -53,7 +53,7 @@ void MainComponent::ProcessErrorMessage(ErrorMessage&& errorMsg) {
 }
 
 void MainComponent::RegisterLogLevel(EnergyPlus::Error log_level) {
-  if (level_checkbox.contains(log_level)) {
+  if (log_level == EnergyPlus::Error::Continue || level_checkbox.contains(log_level)) {
     return;
   }
 
@@ -73,8 +73,13 @@ Element MainComponent::Render() {
   std::vector<ErrorMessage*> filtered_errorMsgs;
   filtered_errorMsgs.reserve(m_errors.size());
 
+  bool prevAllowed = false;
+
   for (auto& m_error : m_errors) {
     if (allowed_level.contains(m_error.error)) {
+      filtered_errorMsgs.push_back(&m_error);
+      prevAllowed = true;
+    } else if (m_error.error == EnergyPlus::Error::Continue && prevAllowed) {
       filtered_errorMsgs.push_back(&m_error);
     }
   }
@@ -83,6 +88,20 @@ Element MainComponent::Render() {
 
   auto header = hbox({
     text(L"EnergyPlus-Cpp-Demo"),
+    filler(),
+    separator(),
+
+    hcenter(toggle_->Render()),
+    separator(),
+    gauge(float(current_line) / float(std::max(1, (int)filtered_errorMsgs.size() - 1))) | color(Color::GrayDark),
+    separator(),
+    spinner(5, i++),
+  });
+
+  auto headerError = hbox({
+    text(L"EnergyPlus-Cpp-Demo"),
+    filler(),
+    separator(),
     hcenter(toggle_->Render()),
     separator(),
     text(to_wstring(current_line)),
@@ -111,7 +130,7 @@ Element MainComponent::Render() {
   if (tab_selected_ == 1) {
     return  //
       vbox({
-        header,
+        headerError,
         separator(),
         hbox({
           window(text(L"Type"), container_level_filter_->Render()) | notflex,

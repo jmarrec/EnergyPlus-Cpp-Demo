@@ -62,9 +62,9 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
 
     Element document =  //
       hbox({
-        text(ErrorMessage::formatError(it->error))  //
-          | ftxui::size(WIDTH, EQUAL, size_level)   //
-          | level_decorator                         //
+        text(/*it->error == EnergyPlus::Error::Continue ? "" : */ ErrorMessage::formatError(it->error))  //
+          | ftxui::size(WIDTH, EQUAL, size_level)                                                        //
+          | level_decorator                                                                              //
         ,
 
         separator(),
