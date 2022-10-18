@@ -86,15 +86,8 @@ else()
 endif()
 
 # Enable runtime checking features: TSAN, ASAN, UBSAN
-message("CMAKE_CXX_COMPILER_ID=${CMAKE_CXX_COMPILER_ID}")
-if(CMAKE_COMPILER_IS_GNUCC OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-
-  option(ENABLE_COVERAGE "Enable coverage reporting for gcc/clang" ON)
-  if(ENABLE_COVERAGE)
-    target_compile_options(project_options INTERFACE --coverage -O0 -g)
-    target_link_libraries(project_options INTERFACE --coverage)
-  endif()
-endif()
+include(cmake/Sanitizers.cmake)
+enable_sanitizers(project_options)
 
 ###############################################################################
 #                         C M A K E    C O N T R O L                          #
@@ -150,15 +143,27 @@ message("energyplus=${energyplus}")
 
 
 add_executable(epcli
-  main.cpp
+  src/main.cpp
+  src/MainComponent.hpp
+  src/MainComponent.cpp
+
+  src/AboutComponent.hpp
+  src/AboutComponent.cpp
+
+  src/LogDisplayer.hpp
+  src/LogDisplayer.cpp
+
+  src/ErrorMessage.hpp
+  src/ErrorMessage.cpp
 )
 target_link_libraries(epcli
   PRIVATE
   project_options
   fmt::fmt
-  ftxui::screen
-  ftxui::dom
-  ftxui::component
+  # ftxui::screen
+  # ftxui::dom
+  # ftxui::component
+  ftxui::ftxui
   energyplus::energyplusapi
 )
 
