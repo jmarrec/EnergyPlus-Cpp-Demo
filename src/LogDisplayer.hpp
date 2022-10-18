@@ -23,5 +23,4 @@ class LogDisplayer : public ComponentBase
   int m_size = 0;
 };
 
-#endif  // * end of include guard: UI_LOG_DISPLAYER_HPP */
-
+#endif  // LOG_DISPLAYER_HPP
