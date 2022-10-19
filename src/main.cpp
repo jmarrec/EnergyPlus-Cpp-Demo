@@ -1,8 +1,3 @@
-#include <EnergyPlus/api/runtime.h>
-#include <EnergyPlus/api/state.h>
-#include <EnergyPlus/api/func.h>
-#include <EnergyPlus/api/TypeDefs.h>
-
 #include "MainComponent.hpp"
 #include "ErrorMessage.hpp"
 #include "EnergyPlus.hpp"
@@ -33,12 +28,10 @@
 #endif
 
 namespace fs = std::filesystem;
-using namespace std::chrono_literals;
 
 template <typename TP>
 std::chrono::time_point<std::chrono::system_clock> to_system_clock(TP tp) {
-  using namespace std::chrono;
-  return time_point_cast<system_clock::duration>(tp - TP::clock::now() + system_clock::now());
+  return std::chrono::time_point_cast<std::chrono::system_clock::duration>(tp - TP::clock::now() + std::chrono::system_clock::now());
 }
 
 int main(int argc, const char* argv[]) {
@@ -56,7 +49,7 @@ int main(int argc, const char* argv[]) {
     }
   }
 
-  std::chrono::time_point<std::chrono::file_clock> lastWriteTime = fs::last_write_time(filePath);
+  /* std::chrono::time_point<std::chrono::file_clock> */ auto lastWriteTime = fs::last_write_time(filePath);
 
   auto screen = ftxui::ScreenInteractive::Fullscreen();
 
