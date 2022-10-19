@@ -57,6 +57,7 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
             Container::Horizontal({
               m_runButton,
               m_openHTMLButton,
+              m_clearResultsButton,
             }),
             m_stdout_displayer,
           }),
@@ -75,8 +76,14 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
 void MainComponent::clear_state() {
   m_stdout_lines.clear();
   m_errors.clear();
+  *m_progress = 0;
   m_numWarnings = 0;
   m_numSeveres = 0;
+  m_hasAlreadyRun = false;
+}
+
+bool MainComponent::hasAlreadyRun() const {
+  return m_hasAlreadyRun;
 }
 
 bool MainComponent::OnEvent(Event event) {
@@ -146,10 +153,12 @@ Element MainComponent::Render() {
         | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
       filler(),
       (*m_progress == 100) ? m_openHTMLButton->Render() : text(""),
+      (*m_progress == 100) ? m_clearResultsButton->Render() : text(""),
     });
 
     auto run_gaugeLabel = [this]() {
       if (*m_progress == 100) {
+        m_hasAlreadyRun = true;
         return ftxui::text("Done") | color(Color::Green) | bold;
       } else if (*m_progress > 0) {
         return ftxui::text("Running") | color(Color::Yellow);

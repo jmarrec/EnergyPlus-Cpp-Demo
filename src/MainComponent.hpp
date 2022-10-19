@@ -24,6 +24,7 @@ class MainComponent : public ComponentBase
   bool OnEvent(Event event) override;
 
   void clear_state();
+  bool hasAlreadyRun() const;
 
  private:
   Receiver<std::string> m_receiverRunOutput;
@@ -37,6 +38,8 @@ class MainComponent : public ComponentBase
   unsigned m_numWarnings = 0;
   void RegisterLogLevel(EnergyPlus::Error log_level);
   std::map<EnergyPlus::Error, bool> level_checkbox;
+
+  bool m_hasAlreadyRun = false;
 
   // std::function<void()> onRunClicked;
   // std::string run_text = "Run";
@@ -67,6 +70,10 @@ class MainComponent : public ComponentBase
   std::string m_outputHTMLButtonText = "Open HTML";
   Component m_openHTMLButton;
   std::filesystem::path m_outputDirectory;
+
+  std::string m_clearResultsButtonText = "Clear Results";
+  Component m_clearResultsButton = Button(
+    &m_clearResultsButtonText, [this]() { this->clear_state(); }, ButtonOption::Simple());
 };
 
 #endif  // MAIN_COMPONENT_HPP

@@ -66,8 +66,6 @@ int main(int argc, const char* argv[]) {
   auto senderRunOutput = receiverRunOutput->MakeSender();
   auto senderErrorOutput = receiverErrorOutput->MakeSender();
 
-  bool hasBeenRunBefore = false;
-
   std::atomic<int> progress = 0;
 
   std::shared_ptr<MainComponent> component;
@@ -80,7 +78,7 @@ int main(int argc, const char* argv[]) {
       if (runThread.joinable()) {
         runThread.join();
       }
-      if (hasBeenRunBefore) {
+      if (component != nullptr && component->hasAlreadyRun()) {
         fs::file_time_type newWriteTime = fs::last_write_time(filePath);
         if (newWriteTime <= lastWriteTime) {
           senderRunOutput->Send("--------------------------------------------------------------------------");
@@ -90,7 +88,6 @@ int main(int argc, const char* argv[]) {
         }
         component->clear_state();
       }
-      hasBeenRunBefore = true;
       runThread = std::thread(epcli::runEnergyPlus, argc, argv, &senderRunOutput, &senderErrorOutput, &progress, &screen);
     },
     ftxui::ButtonOption::Simple());
