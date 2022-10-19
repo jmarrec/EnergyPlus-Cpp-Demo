@@ -84,7 +84,7 @@ Element MainComponent::Render() {
       text(L"EnergyPlus-Cpp-Demo"),
       filler(),
       separator(),
-      hcenter(toggle_->Render()),
+      hcenter(toggle_->Render()) | color(Color::Yellow),
       separator(),
       text(to_wstring(current_line + 1)),
       text(L"/"),
@@ -97,7 +97,11 @@ Element MainComponent::Render() {
     });
 
     auto runRow = ftxui::hbox({
-      m_runButton->Render() | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
+      filler(),
+      m_runButton->Render() |                                                                    //
+        ((*m_progress > 0 && *m_progress < 100) ? color(Color::GrayDark) : color(Color::Green))  //
+        | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
+      filler(),
     });
 
     auto run_gaugeLabel = [this]() {
@@ -162,7 +166,7 @@ Element MainComponent::Render() {
       text(L"EnergyPlus-Cpp-Demo"),
       filler(),
       separator(),
-      hcenter(toggle_->Render()),
+      hcenter(toggle_->Render()) | color(Color::Red),
       separator(),
       text(to_wstring(current_line)),
       text(L"/"),
@@ -195,7 +199,7 @@ Element MainComponent::Render() {
     text(L"EnergyPlus-Cpp-Demo"),
     filler(),
     separator(),
-    hcenter(toggle_->Render()),
+    hcenter(toggle_->Render()) | color(Color::Blue),
     separator(),
     filler(),
     spinner(5, i++),
