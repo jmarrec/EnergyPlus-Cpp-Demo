@@ -48,7 +48,7 @@ int main(int argc, const char* argv[]) {
     [&]() {
       runThread = std::thread(epcli::runEnergyPlus, argc, argv, std::move(senderRunOutput), std::move(senderErrorOutput), &progress, &screen);
     },
-    ftxui::ButtonOption::Ascii());
+    ftxui::ButtonOption::Simple());
 
   std::string quit_text = "Quit";
   auto quit_button = ftxui::Button(&quit_text, screen.ExitLoopClosure(), ftxui::ButtonOption::Ascii());

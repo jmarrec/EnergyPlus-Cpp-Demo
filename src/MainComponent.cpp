@@ -18,14 +18,16 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
     m_progress(progress) {
   Add(  //
     Container::Vertical({
-      toggle_,
+      Container::Horizontal({
+        toggle_,
+        m_quitButton,
+      }),
       Container::Tab(
         {
           // Stdout / Run
           Container::Vertical({
             Container::Horizontal({
               m_runButton,
-              m_quitButton,
             }),
             m_stdout_displayer,
           }),
@@ -90,12 +92,11 @@ Element MainComponent::Render() {
       gauge(float(current_line) / float(std::max(1, (int)m_stdout_lines.size() - 1))) | color(Color::GrayDark),
       separator(),
       spinner(5, i++),
+      m_quitButton->Render(),
     });
 
     auto runRow = ftxui::hbox({
       m_runButton->Render() | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
-      ftxui::filler(),
-      m_quitButton->Render() | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
     });
 
     auto runGaugeRow = ftxui::hbox({
@@ -158,6 +159,7 @@ Element MainComponent::Render() {
       gauge(float(current_line) / float(std::max(1, (int)filtered_errorMsgs.size() - 1))) | color(Color::GrayDark),
       separator(),
       spinner(5, i++),
+      m_quitButton->Render(),
     });
 
     return  //
@@ -180,7 +182,9 @@ Element MainComponent::Render() {
     separator(),
     hcenter(toggle_->Render()),
     separator(),
+    filler(),
     spinner(5, i++),
+    m_quitButton->Render(),
   });
 
   return  //
