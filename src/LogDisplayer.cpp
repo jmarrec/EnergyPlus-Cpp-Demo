@@ -81,7 +81,7 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
   return window(text(L"Log"), vbox({
                                 header,
                                 separator(),
-                                vbox(list) | yframe,
+                                vbox(list) | vscroll_indicator | yframe | reflect(box_),
                               }));
 }
 
@@ -124,7 +124,7 @@ Element LogDisplayer::RenderLines(const std::vector<std::string>& lines) {
   return window(text(L"Log"), vbox({
                                 header,
                                 separator(),
-                                vbox(list) | yframe,
+                                vbox(list) | vscroll_indicator | yframe | reflect(box_),
                               }));
 }
 
@@ -144,12 +144,15 @@ bool LogDisplayer::OnEvent(Event event) {
   // if (!Focused()) {
   //   return false;
   // }
+  if (event.is_mouse() && box_.Contain(event.mouse().x, event.mouse().y)) {
+    TakeFocus();
+  }
 
   int old_selected = m_selected;
-  if (event == Event::ArrowUp || event == Event::Character('k')) {
+  if (event == Event::ArrowUp || event == Event::Character('k') || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
     --m_selected;
   }
-  if (event == Event::ArrowDown || event == Event::Character('j')) {
+  if (event == Event::ArrowDown || event == Event::Character('j') || (event.is_mouse() && event.mouse().button == Mouse::WheelDown)) {
     ++m_selected;
   }
   if (event == Event::Tab && (m_size != 0)) {
@@ -157,6 +160,12 @@ bool LogDisplayer::OnEvent(Event event) {
   }
   if (event == Event::TabReverse && (m_size != 0)) {
     m_selected -= m_size / 10;
+  }
+  if (event == Event::Home) {
+    m_selected = 0;
+  }
+  if (event == Event::End) {
+    m_selected = m_size;
   }
 
   m_selected = std::max(0, std::min(m_size - 1, m_selected));
