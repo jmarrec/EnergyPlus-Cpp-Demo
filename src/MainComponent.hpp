@@ -17,7 +17,8 @@ using namespace ftxui;
 class MainComponent : public ComponentBase
 {
  public:
-  MainComponent(Receiver<std::string> receiverRunOutput, Receiver<ErrorMessage> receiverErrorOutput);
+  MainComponent(Receiver<std::string> receiverRunOutput, Receiver<ErrorMessage> receiverErrorOutput, Component runButton, Component quitButton,
+                std::atomic<int>* progress);
   Element Render() override;
   bool OnEvent(Event event) override;
 
@@ -33,12 +34,25 @@ class MainComponent : public ComponentBase
   void RegisterLogLevel(EnergyPlus::Error log_level);
   std::map<EnergyPlus::Error, bool> level_checkbox;
 
+  // std::function<void()> onRunClicked;
+  // std::string run_text = "Run";
+  Component m_runButton;  // = Button(&run_text, onRunClicked, ftxui::ButtonOption::Ascii());
+
+  // std::string quit_text = "Quit";
+  // std::function<void()> onQuitClicked;
+  Component m_quitButton;  // = ftxui::Button(&quit_text, onQuitClicked, ftxui::ButtonOption::Ascii());
+
+  std::string m_runGaugeText = "Pending";
+
+  std::atomic<int>* m_progress;
+
   int tab_selected_ = 0;
   std::vector<std::string> tab_entries_ = {
     "Stdout",
     "eplusout.err",
     "About",
   };
+
   Component toggle_ = Toggle(&tab_entries_, &tab_selected_);
 
   Component container_level_filter_ = Container::Vertical({});

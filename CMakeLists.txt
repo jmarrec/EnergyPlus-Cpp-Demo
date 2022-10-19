@@ -141,7 +141,6 @@ message("energyplus=${energyplus}")
 #                              E X E C U T A B L E                            #
 ###############################################################################
 
-
 add_executable(epcli
   src/main.cpp
   src/MainComponent.hpp
@@ -155,7 +154,11 @@ add_executable(epcli
 
   src/ErrorMessage.hpp
   src/ErrorMessage.cpp
+
+  src/EnergyPlus.hpp
+  src/EnergyPlus.cpp
 )
+
 target_link_libraries(epcli
   PRIVATE
   project_options

@@ -45,10 +45,10 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
   int index = 0;
   for (auto& it : lines) {
     bool is_focus = (index++ == m_selected);
-    if (previous_type != static_cast<int>(lines[0]->error)) {
+    if (it->error != EnergyPlus::Error::Continue && previous_type != static_cast<int>(it->error)) {
       list.push_back(separator());
     }
-    previous_type = static_cast<int>(lines[0]->error);
+    previous_type = static_cast<int>(it->error);
 
     Decorator line_decorator = log_style[it->error].line_decorator;
     Decorator level_decorator = log_style[it->error].level_decorator;
@@ -66,9 +66,7 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
           | ftxui::size(WIDTH, EQUAL, size_level)                                                        //
           | level_decorator                                                                              //
         ,
-
         separator(),
-
         text(it->message)  //
           | flex,
       })
@@ -134,10 +132,18 @@ int LogDisplayer::selected() const {
   return m_selected;
 }
 
+void LogDisplayer::incrementSelected() {
+  ++m_selected;
+}
+
+void LogDisplayer::setSelected(int index) {
+  m_selected = index;
+}
+
 bool LogDisplayer::OnEvent(Event event) {
-  if (!Focused()) {
-    return false;
-  }
+  // if (!Focused()) {
+  //   return false;
+  // }
 
   int old_selected = m_selected;
   if (event == Event::ArrowUp || event == Event::Character('k')) {
@@ -147,10 +153,10 @@ bool LogDisplayer::OnEvent(Event event) {
     ++m_selected;
   }
   if (event == Event::Tab && (m_size != 0)) {
-    m_selected = (m_selected + 1) % m_size;
+    m_selected += m_size / 10;
   }
   if (event == Event::TabReverse && (m_size != 0)) {
-    m_selected = (m_selected + m_size - 1) % m_size;
+    m_selected -= m_size / 10;
   }
 
   m_selected = std::max(0, std::min(m_size - 1, m_selected));
