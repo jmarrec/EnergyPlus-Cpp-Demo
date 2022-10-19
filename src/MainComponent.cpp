@@ -16,6 +16,7 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
     m_runButton(std::move(runButton)),
     m_quitButton(std::move(quitButton)),
     m_progress(progress) {
+
   Add(  //
     Container::Vertical({
       Container::Horizontal({
@@ -26,9 +27,7 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
         {
           // Stdout / Run
           Container::Vertical({
-            Container::Horizontal({
-              m_runButton,
-            }),
+            m_runButton,
             m_stdout_displayer,
           }),
           // eplusout.err
