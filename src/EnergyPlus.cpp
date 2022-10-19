@@ -10,7 +10,7 @@
 
 namespace epcli {
 
-void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string> senderRunOutput, ftxui::Sender<ErrorMessage> senderErrorOutput,
+void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string>* senderRunOutput, ftxui::Sender<ErrorMessage>* senderErrorOutput,
                    std::atomic<int>* progress, ftxui::ScreenInteractive* screen) {
 
   EnergyPlusState state = stateNew();
@@ -30,14 +30,14 @@ void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string> send
 
   setConsoleOutputState(state, 0);
   registerStdOutCallback(state, [&senderRunOutput, &screen](const std::string& message) {
-    senderRunOutput->Send(message);
+    (*senderRunOutput)->Send(message);
     screen->PostEvent(ftxui::Event::Custom);
   });
 
   registerErrorCallback(state, [&senderErrorOutput, &screen](EnergyPlus::Error error, const std::string& message) {
     // fmt::print("[{}%] {}\n", progress, msg);
 
-    senderErrorOutput->Send(ErrorMessage{error, message});
+    (*senderErrorOutput)->Send(ErrorMessage{error, message});
     screen->PostEvent(ftxui::Event::Custom);
   });
 

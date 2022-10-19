@@ -25,45 +25,79 @@
 #include <filesystem>  // for path
 
 #include <fmt/format.h>
+#include <fmt/chrono.h>
+#include <fmt/std.h>  // for formatting std::filesystem::path
 
 #ifdef _WIN32
 #  define __PRETTY_FUNCTION__ __FUNCSIG__
 #endif
 
+namespace fs = std::filesystem;
+using namespace std::chrono_literals;
+
+template <typename TP>
+std::chrono::time_point<std::chrono::system_clock> to_system_clock(TP tp) {
+  using namespace std::chrono;
+  return time_point_cast<system_clock::duration>(tp - TP::clock::now() + system_clock::now());
+}
+
 int main(int argc, const char* argv[]) {
 
-  std::string filename = "in.idf";
+  fs::path filePath;
+
   if (argc > 1) {
-    std::filesystem::path filePath(argv[argc - 1]);
-    if (epcli::validateFileType(filePath)) {
-      filename = filePath.string();
+    filePath = fs::path(argv[argc - 1]);
+    if (!epcli::validateFileType(filePath)) {
+      filePath = fs::path("in.idf");
+    }
+    if (!fs::is_regular_file(filePath)) {
+      fmt::print("File does not exist at '{}'\n", filePath);
+      exit(1);
     }
   }
+
+  std::chrono::time_point<std::chrono::file_clock> lastWriteTime = fs::last_write_time(filePath);
 
   auto screen = ftxui::ScreenInteractive::Fullscreen();
 
   auto receiverRunOutput = ftxui::MakeReceiver<std::string>();
-  auto senderRunOutput = receiverRunOutput->MakeSender();
-
   auto receiverErrorOutput = ftxui::MakeReceiver<ErrorMessage>();
+  auto senderRunOutput = receiverRunOutput->MakeSender();
   auto senderErrorOutput = receiverErrorOutput->MakeSender();
+
+  bool hasBeenRunBefore = false;
 
   std::atomic<int> progress = 0;
 
-  std::string run_text = "Run " + filename;
+  std::shared_ptr<MainComponent> component;
+
+  std::string run_text = "Run " + filePath.string();
   std::thread runThread;
   auto run_button = ftxui::Button(
     &run_text,
     [&]() {
-      runThread = std::thread(epcli::runEnergyPlus, argc, argv, std::move(senderRunOutput), std::move(senderErrorOutput), &progress, &screen);
+      if (runThread.joinable()) {
+        component->clear_state();
+        runThread.join();
+      }
+      if (hasBeenRunBefore) {
+        fs::file_time_type newWriteTime = fs::last_write_time(filePath);
+        if (newWriteTime <= lastWriteTime) {
+          senderRunOutput->Send(fmt::format("Refusing to rerun file at {}, it was not modified since last run, Last modified time: {}", filePath,
+                                            to_system_clock(lastWriteTime)));
+          return;
+        }
+      }
+      hasBeenRunBefore = true;
+      runThread = std::thread(epcli::runEnergyPlus, argc, argv, &senderRunOutput, &senderErrorOutput, &progress, &screen);
     },
     ftxui::ButtonOption::Simple());
 
   std::string quit_text = "Quit";
   auto quit_button = ftxui::Button(&quit_text, screen.ExitLoopClosure(), ftxui::ButtonOption::Ascii());
 
-  auto component = std::make_shared<MainComponent>(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button),
-                                                   std::move(quit_button), &progress);
+  component = std::make_shared<MainComponent>(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button),
+                                              std::move(quit_button), &progress);
 
   screen.Loop(component);
 
