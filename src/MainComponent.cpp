@@ -100,8 +100,22 @@ Element MainComponent::Render() {
       m_runButton->Render() | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
     });
 
+    auto run_gaugeLabel = [this]() {
+      if (*m_progress == 100) {
+        return ftxui::text("Done") | color(Color::Green) | bold;
+      } else if (*m_progress > 0) {
+        return ftxui::text("Running") | color(Color::Yellow);
+      } else if (*m_progress < 0) {
+        return ftxui::text("Failed") | color(Color::Red) | bold;
+      } else {
+        return ftxui::text("Pending") | color(Color::Blue);
+      }
+    };
     auto runGaugeRow = ftxui::hbox({
-      ftxui::text(m_runGaugeText),
+      text("Status"),
+      separator(),
+      hcenter(run_gaugeLabel()) | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
+      separator(),
       ftxui::gauge(*m_progress / 100.f) | ftxui::flex,
       ftxui::text(fmt::format("{} %", *m_progress)),
     });
