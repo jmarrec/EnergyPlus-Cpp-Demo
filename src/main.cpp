@@ -19,9 +19,10 @@
 #include <ftxui/dom/node.hpp>
 #include <ftxui/component/receiver.hpp>
 
-#include <algorithm>  // for min, max
-#include <atomic>     // for atomic
-#include <chrono>     // for operator""s, chrono_literals
+#include <algorithm>   // for min, max
+#include <atomic>      // for atomic
+#include <chrono>      // for operator""s, chrono_literals
+#include <filesystem>  // for path
 
 #include <fmt/format.h>
 
@@ -30,6 +31,14 @@
 #endif
 
 int main(int argc, const char* argv[]) {
+
+  std::string filename = "in.idf";
+  if (argc > 1) {
+    std::filesystem::path filePath(argv[argc - 1]);
+    if (epcli::validateFileType(filePath)) {
+      filename = filePath.string();
+    }
+  }
 
   auto screen = ftxui::ScreenInteractive::Fullscreen();
 
@@ -41,7 +50,7 @@ int main(int argc, const char* argv[]) {
 
   std::atomic<int> progress = 0;
 
-  std::string run_text = "Run";
+  std::string run_text = "Run " + filename;
   std::thread runThread;
   auto run_button = ftxui::Button(
     &run_text,

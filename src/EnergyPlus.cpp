@@ -5,6 +5,9 @@
 #include <EnergyPlus/api/func.h>
 #include <EnergyPlus/api/TypeDefs.h>
 
+#include <array>      // For array
+#include <algorithm>  // For find
+
 namespace epcli {
 
 void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string> senderRunOutput, ftxui::Sender<ErrorMessage> senderErrorOutput,
@@ -44,6 +47,16 @@ void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string> send
   stateDelete(state);
 
   screen->PostEvent(ftxui::Event::Custom);
+}
+
+static constexpr std::array<std::string_view, 4> acceptedExtensions{".epjson", ".json", ".idf", ".imf"};
+
+bool validateFileType(const std::filesystem::path& filePath) {
+
+  auto const filePathStr = filePath.extension().string();
+
+  auto ext = ascii_to_lower_copy(filePathStr);
+  return (std::find(acceptedExtensions.cbegin(), acceptedExtensions.cend(), ext) != acceptedExtensions.cend());
 }
 
 }  // namespace epcli
