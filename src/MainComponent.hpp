@@ -4,6 +4,7 @@
 #include "AboutComponent.hpp"
 #include "ErrorMessage.hpp"
 #include "LogDisplayer.hpp"
+#include "sqlite/SQLiteReports.hpp"
 
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/receiver.hpp>
@@ -57,6 +58,7 @@ class MainComponent : public ComponentBase
   std::vector<std::string> tab_entries_ = {
     "Stdout",
     "eplusout.err",
+    "SQL Reports",
     "About",
   };
 
@@ -74,6 +76,8 @@ class MainComponent : public ComponentBase
   std::string m_clearResultsButtonText = "Clear Results";
   Component m_clearResultsButton = Button(
     &m_clearResultsButtonText, [this]() { this->clear_state(); }, ButtonOption::Simple());
+
+  std::shared_ptr<SQLiteComponent> m_sqlite_component = Make<SQLiteComponent>();
 };
 
 #endif  // MAIN_COMPONENT_HPP
