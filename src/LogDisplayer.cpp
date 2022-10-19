@@ -132,10 +132,18 @@ int LogDisplayer::selected() const {
   return m_selected;
 }
 
+void LogDisplayer::incrementSelected() {
+  ++m_selected;
+}
+
+void LogDisplayer::setSelected(int index) {
+  m_selected = index;
+}
+
 bool LogDisplayer::OnEvent(Event event) {
-  if (!Focused()) {
-    return false;
-  }
+  // if (!Focused()) {
+  //   return false;
+  // }
 
   int old_selected = m_selected;
   if (event == Event::ArrowUp || event == Event::Character('k')) {
@@ -145,10 +153,10 @@ bool LogDisplayer::OnEvent(Event event) {
     ++m_selected;
   }
   if (event == Event::Tab && (m_size != 0)) {
-    m_selected = (m_selected + 1) % m_size;
+    m_selected += m_size / 10;
   }
   if (event == Event::TabReverse && (m_size != 0)) {
-    m_selected = (m_selected + m_size - 1) % m_size;
+    m_selected -= m_size / 10;
   }
 
   m_selected = std::max(0, std::min(m_size - 1, m_selected));

@@ -17,6 +17,9 @@ class LogDisplayer : public ComponentBase
   Element RenderLines(const std::vector<std::string>& lines);
   bool OnEvent(Event event) override;
   int selected() const;
+  void incrementSelected();
+  void setSelected(int index);
+
   virtual bool Focusable() const override {
     return true;
   };

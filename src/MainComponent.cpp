@@ -47,6 +47,8 @@ bool MainComponent::OnEvent(Event event) {
     std::string line;
     m_receiverRunOutput->Receive(&line);
     m_stdout_lines.emplace_back(std::move(line));
+    m_stdout_displayer->setSelected(m_stdout_lines.size());
+    m_stdout_displayer->TakeFocus();
   }
 
   while (m_receiverErrorOutput->HasPending()) {
@@ -84,7 +86,7 @@ Element MainComponent::Render() {
       separator(),
       hcenter(toggle_->Render()),
       separator(),
-      text(to_wstring(current_line)),
+      text(to_wstring(current_line + 1)),
       text(L"/"),
       text(to_wstring(m_stdout_lines.size())),
       separator(),
