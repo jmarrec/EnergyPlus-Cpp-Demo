@@ -77,16 +77,17 @@ int main(int argc, const char* argv[]) {
     &run_text,
     [&]() {
       if (runThread.joinable()) {
-        component->clear_state();
         runThread.join();
       }
       if (hasBeenRunBefore) {
         fs::file_time_type newWriteTime = fs::last_write_time(filePath);
         if (newWriteTime <= lastWriteTime) {
+          senderRunOutput->Send("--------------------------------------------------------------------------");
           senderRunOutput->Send(fmt::format("Refusing to rerun file at {}, it was not modified since last run, Last modified time: {}", filePath,
                                             to_system_clock(lastWriteTime)));
           return;
         }
+        component->clear_state();
       }
       hasBeenRunBefore = true;
       runThread = std::thread(epcli::runEnergyPlus, argc, argv, &senderRunOutput, &senderErrorOutput, &progress, &screen);
