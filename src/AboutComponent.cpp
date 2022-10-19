@@ -7,6 +7,12 @@ Element AboutComponent::Render() {
       separator(),
       text(L"https://github.com/jmarrec/EnergyPlus-Cpp-Demo"),
     }),
+    separator(),
+    hbox({
+      text(L"Build date         ") | bold,
+      separator(),
+      text(L"Unspecified"),
+    }),
   });
 
   if (Focused()) {

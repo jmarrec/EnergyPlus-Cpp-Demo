@@ -45,10 +45,10 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
   int index = 0;
   for (auto& it : lines) {
     bool is_focus = (index++ == m_selected);
-    if (previous_type != static_cast<int>(lines[0]->error)) {
+    if (it->error != EnergyPlus::Error::Continue && previous_type != static_cast<int>(it->error)) {
       list.push_back(separator());
     }
-    previous_type = static_cast<int>(lines[0]->error);
+    previous_type = static_cast<int>(it->error);
 
     Decorator line_decorator = log_style[it->error].line_decorator;
     Decorator level_decorator = log_style[it->error].level_decorator;
@@ -66,9 +66,7 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
           | ftxui::size(WIDTH, EQUAL, size_level)                                                        //
           | level_decorator                                                                              //
         ,
-
         separator(),
-
         text(it->message)  //
           | flex,
       })
