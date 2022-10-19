@@ -1,13 +1,14 @@
-#ifndef UI_MAIN_COMPONENT_HPP
-#define UI_MAIN_COMPONENT_HPP
-
-#include <ftxui/component/component.hpp>
-#include <ftxui/component/receiver.hpp>
+#ifndef MAIN_COMPONENT_HPP
+#define MAIN_COMPONENT_HPP
 
 #include "AboutComponent.hpp"
 #include "ErrorMessage.hpp"
 #include "LogDisplayer.hpp"
 
+#include <ftxui/component/component.hpp>
+#include <ftxui/component/receiver.hpp>
+
+#include <filesystem>
 #include <map>
 #include <string>
 #include <vector>
@@ -18,7 +19,7 @@ class MainComponent : public ComponentBase
 {
  public:
   MainComponent(Receiver<std::string> receiverRunOutput, Receiver<ErrorMessage> receiverErrorOutput, Component runButton, Component quitButton,
-                std::atomic<int>* progress);
+                std::atomic<int>* progress, std::filesystem::path outputDirectory);
   Element Render() override;
   bool OnEvent(Event event) override;
 
@@ -62,6 +63,10 @@ class MainComponent : public ComponentBase
   std::shared_ptr<LogDisplayer> m_error_displayer = Make<LogDisplayer>();
   std::shared_ptr<LogDisplayer> m_stdout_displayer = Make<LogDisplayer>();
   Component info_component_ = Make<AboutComponent>();
+
+  std::string m_outputHTMLButtonText = "Open HTML";
+  Component m_openHTMLButton;
+  std::filesystem::path m_outputDirectory;
 };
 
-#endif /* end of include guard: UI_MAIN_COMPONENT_HPP */
+#endif  // MAIN_COMPONENT_HPP

@@ -48,6 +48,14 @@ int main(int argc, const char* argv[]) {
       exit(1);
     }
   }
+  fs::path outputDirectory(".");
+  for (int i = 1; i < argc; ++i) {
+    std::string arg(argv[i]);
+    if (arg == "-d" || arg == "--output-directory") {
+      outputDirectory = fs::path(argv[i + 1]);
+      break;
+    }
+  }
 
   /* std::chrono::time_point<std::chrono::file_clock> */ auto lastWriteTime = fs::last_write_time(filePath);
 
@@ -91,7 +99,7 @@ int main(int argc, const char* argv[]) {
   auto quit_button = ftxui::Button(&quit_text, screen.ExitLoopClosure(), ftxui::ButtonOption::Ascii());
 
   component = std::make_shared<MainComponent>(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button),
-                                              std::move(quit_button), &progress);
+                                              std::move(quit_button), &progress, std::move(outputDirectory));
 
   screen.Loop(component);
 
