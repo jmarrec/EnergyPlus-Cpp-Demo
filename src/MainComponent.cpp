@@ -1,23 +1,48 @@
 #include "MainComponent.hpp"
 
-#include <TypeDefs.h>
+#include <EnergyPlus/api/TypeDefs.h>
+
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/component/component.hpp>
 #include <ftxui/screen/string.hpp>
-#include <set>
+
 #include <fmt/format.h>
+#include <fmt/std.h>
+
+#include <filesystem>
+#include <utility>
+#include <set>
 
 using namespace ftxui;
+namespace fs = std::filesystem;
 
 static constexpr auto programName = L"EnergyPlus-Cpp-Demo";
 
 MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<ErrorMessage> receiverErrorOutput, Component runButton,
-                             Component quitButton, std::atomic<int>* progress)
+                             Component quitButton, std::atomic<int>* progress, std::filesystem::path outputDirectory)
   : m_receiverRunOutput(std::move(receiverRunOutput)),
     m_receiverErrorOutput(std::move(receiverErrorOutput)),
     m_runButton(std::move(runButton)),
     m_quitButton(std::move(quitButton)),
-    m_progress(progress) {
+    m_progress(progress),
+    m_outputDirectory(std::move(outputDirectory)) {
+
+  m_openHTMLButton = Button(
+    &m_outputHTMLButtonText,
+    [this]() {
+      fs::path outputPath = m_outputDirectory / "eplustbl.htm";
+      if (fs::is_regular_file(outputPath)) {
+#if __linux__
+        std::string cmd = fmt::format("xdg-open {} &", outputPath);
+#elif __APPLE__
+        std::string cmd = fmt::format("open {} &", outputPath);
+#elif _WIN32
+        std::string cmd = fmt::format("start {} &", outputPath);
+#endif
+        [[maybe_unused]] auto result = std::system(cmd.c_str());
+      }
+    },
+    ButtonOption::Simple());
 
   Add(  //
     Container::Vertical({
@@ -29,7 +54,11 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
         {
           // Stdout / Run
           Container::Vertical({
-            m_runButton,
+            Container::Horizontal({
+              m_runButton,
+              m_openHTMLButton,
+              m_clearResultsButton,
+            }),
             m_stdout_displayer,
           }),
           // eplusout.err
@@ -47,8 +76,14 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
 void MainComponent::clear_state() {
   m_stdout_lines.clear();
   m_errors.clear();
+  *m_progress = 0;
   m_numWarnings = 0;
   m_numSeveres = 0;
+  m_hasAlreadyRun = false;
+}
+
+bool MainComponent::hasAlreadyRun() const {
+  return m_hasAlreadyRun;
 }
 
 bool MainComponent::OnEvent(Event event) {
@@ -117,10 +152,13 @@ Element MainComponent::Render() {
         ((*m_progress > 0 && *m_progress < 100) ? color(Color::GrayDark) : color(Color::Green))  //
         | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
       filler(),
+      (*m_progress == 100) ? m_openHTMLButton->Render() : text(""),
+      (*m_progress == 100) ? m_clearResultsButton->Render() : text(""),
     });
 
     auto run_gaugeLabel = [this]() {
       if (*m_progress == 100) {
+        m_hasAlreadyRun = true;
         return ftxui::text("Done") | color(Color::Green) | bold;
       } else if (*m_progress > 0) {
         return ftxui::text("Running") | color(Color::Yellow);

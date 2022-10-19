@@ -11,7 +11,12 @@ Element AboutComponent::Render() {
     hbox({
       text(L"Skipping Lines faster      ") | bold,
       separator(),
-      text(L"Use TAB / SHIFT+TAB to skip lines (10 TABs = all)"),
+      vbox({
+        text("Use TAB / SHIFT+TAB to skip lines (10 TABs = all)"),
+        text("PageUp/PageDown (or Fn+Up/Down on laptops) switches pages"),
+        text("Home/End key can go to the start/end of the log"),
+        text("The Wheel of your mouse is also usable"),
+      }),
     }),
   });
 
