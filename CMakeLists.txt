@@ -129,6 +129,7 @@ include_directories(${PROJECT_BINARY_DIR})
 
 find_package(fmt REQUIRED)
 find_package(ftxui REQUIRED)
+find_package(sqlite3 REQUIRED)
 
 ###############################################################################
 #                             E N E R G Y P L U S                             #
@@ -157,6 +158,11 @@ add_executable(epcli
 
   src/EnergyPlus.hpp
   src/EnergyPlus.cpp
+
+  src/sqlite/PreparedStatement.hpp
+  src/sqlite/PreparedStatement.cpp
+  src/sqlite/SQLiteReports.hpp
+  src/sqlite/SQLiteReports.cpp
 )
 
 target_link_libraries(epcli
@@ -167,6 +173,7 @@ target_link_libraries(epcli
   # ftxui::dom
   # ftxui::component
   ftxui::ftxui
+  SQLite::SQLite3
   energyplus::energyplusapi
 )
 
