@@ -9,6 +9,8 @@
 
 using namespace ftxui;
 
+static constexpr auto programName = L"EnergyPlus-Cpp-Demo";
+
 MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<ErrorMessage> receiverErrorOutput, Component runButton,
                              Component quitButton, std::atomic<int>* progress)
   : m_receiverRunOutput(std::move(receiverRunOutput)),
@@ -60,6 +62,12 @@ bool MainComponent::OnEvent(Event event) {
 }
 
 void MainComponent::ProcessErrorMessage(ErrorMessage&& errorMsg) {
+  if (errorMsg.error == EnergyPlus::Error::Warning) {
+    ++m_numWarnings;
+  }
+  if (errorMsg.error == EnergyPlus::Error::Severe) {
+    ++m_numWarnings;
+  }
   RegisterLogLevel(errorMsg.error);
   m_errors.emplace_back(errorMsg);
 }
@@ -81,10 +89,10 @@ Element MainComponent::Render() {
   if (tab_selected_ == 0) {
 
     auto header = hbox({
-      text(L"EnergyPlus-Cpp-Demo"),
+      text(programName),
       filler(),
       separator(),
-      hcenter(toggle_->Render()),
+      hcenter(toggle_->Render()) | color(Color::Yellow),
       separator(),
       text(to_wstring(current_line + 1)),
       text(L"/"),
@@ -97,13 +105,35 @@ Element MainComponent::Render() {
     });
 
     auto runRow = ftxui::hbox({
-      m_runButton->Render() | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
+      filler(),
+      m_runButton->Render() |                                                                    //
+        ((*m_progress > 0 && *m_progress < 100) ? color(Color::GrayDark) : color(Color::Green))  //
+        | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
+      filler(),
     });
 
+    auto run_gaugeLabel = [this]() {
+      if (*m_progress == 100) {
+        return ftxui::text("Done") | color(Color::Green) | bold;
+      } else if (*m_progress > 0) {
+        return ftxui::text("Running") | color(Color::Yellow);
+      } else if (*m_progress < 0) {
+        return ftxui::text("Failed") | color(Color::Red) | bold;
+      } else {
+        return ftxui::text("Pending") | color(Color::Blue);
+      }
+    };
     auto runGaugeRow = ftxui::hbox({
-      ftxui::text(m_runGaugeText),
+      text("Status"),
+      separator(),
+      hcenter(run_gaugeLabel()) | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 20),
+      separator(),
       ftxui::gauge(*m_progress / 100.f) | ftxui::flex,
       ftxui::text(fmt::format("{} %", *m_progress)),
+      separator(),
+      text(fmt::format("{} warnings", m_numWarnings)) | ((m_numWarnings > 0) ? color(Color::Yellow) : color(Color::GrayLight)),
+      separator(),
+      text(fmt::format("{} severes", m_numSeveres)) | ((m_numWarnings > 0) ? color(Color::Red) : color(Color::GrayLight)),
     });
 
     // Stdout
@@ -145,10 +175,10 @@ Element MainComponent::Render() {
     }
 
     auto headerError = hbox({
-      text(L"EnergyPlus-Cpp-Demo"),
+      text(programName),
       filler(),
       separator(),
-      hcenter(toggle_->Render()),
+      hcenter(toggle_->Render()) | color(Color::Red),
       separator(),
       text(to_wstring(current_line)),
       text(L"/"),
@@ -178,10 +208,10 @@ Element MainComponent::Render() {
   // About
 
   auto header = hbox({
-    text(L"EnergyPlus-Cpp-Demo"),
+    text(programName),
     filler(),
     separator(),
-    hcenter(toggle_->Render()),
+    hcenter(toggle_->Render()) | color(Color::Blue),
     separator(),
     filler(),
     spinner(5, i++),

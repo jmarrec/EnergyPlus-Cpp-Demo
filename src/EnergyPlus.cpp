@@ -41,9 +41,12 @@ void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string> send
     screen->PostEvent(ftxui::Event::Custom);
   });
 
-  energyplus(state, argc, argv);
-
-  *progress = 100;
+  int success = energyplus(state, argc, argv);
+  if (success == 0) {
+    *progress = 100;
+  } else {
+    *progress = -1;
+  }
   stateDelete(state);
 
   screen->PostEvent(ftxui::Event::Custom);

@@ -30,7 +30,8 @@ class MainComponent : public ComponentBase
 
   void ProcessErrorMessage(ErrorMessage&& errorMsg);
   std::vector<ErrorMessage> m_errors;
-
+  unsigned m_numSeveres = 0;
+  unsigned m_numWarnings = 0;
   void RegisterLogLevel(EnergyPlus::Error log_level);
   std::map<EnergyPlus::Error, bool> level_checkbox;
 
