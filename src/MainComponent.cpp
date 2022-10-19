@@ -9,6 +9,8 @@
 
 using namespace ftxui;
 
+static constexpr auto programName = L"EnergyPlus-Cpp-Demo";
+
 MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<ErrorMessage> receiverErrorOutput, Component runButton,
                              Component quitButton, std::atomic<int>* progress)
   : m_receiverRunOutput(std::move(receiverRunOutput)),
@@ -60,6 +62,12 @@ bool MainComponent::OnEvent(Event event) {
 }
 
 void MainComponent::ProcessErrorMessage(ErrorMessage&& errorMsg) {
+  if (errorMsg.error == EnergyPlus::Error::Warning) {
+    ++m_numWarnings;
+  }
+  if (errorMsg.error == EnergyPlus::Error::Severe) {
+    ++m_numWarnings;
+  }
   RegisterLogLevel(errorMsg.error);
   m_errors.emplace_back(errorMsg);
 }
@@ -81,7 +89,7 @@ Element MainComponent::Render() {
   if (tab_selected_ == 0) {
 
     auto header = hbox({
-      text(L"EnergyPlus-Cpp-Demo"),
+      text(programName),
       filler(),
       separator(),
       hcenter(toggle_->Render()) | color(Color::Yellow),
@@ -122,6 +130,10 @@ Element MainComponent::Render() {
       separator(),
       ftxui::gauge(*m_progress / 100.f) | ftxui::flex,
       ftxui::text(fmt::format("{} %", *m_progress)),
+      separator(),
+      text(fmt::format("{} warnings", m_numWarnings)) | ((m_numWarnings > 0) ? color(Color::Yellow) : color(Color::GrayLight)),
+      separator(),
+      text(fmt::format("{} severes", m_numSeveres)) | ((m_numWarnings > 0) ? color(Color::Red) : color(Color::GrayLight)),
     });
 
     // Stdout
@@ -163,7 +175,7 @@ Element MainComponent::Render() {
     }
 
     auto headerError = hbox({
-      text(L"EnergyPlus-Cpp-Demo"),
+      text(programName),
       filler(),
       separator(),
       hcenter(toggle_->Render()) | color(Color::Red),
@@ -196,7 +208,7 @@ Element MainComponent::Render() {
   // About
 
   auto header = hbox({
-    text(L"EnergyPlus-Cpp-Demo"),
+    text(programName),
     filler(),
     separator(),
     hcenter(toggle_->Render()) | color(Color::Blue),
