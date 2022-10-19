@@ -44,6 +44,13 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
     }));
 }
 
+void MainComponent::clear_state() {
+  m_stdout_lines.clear();
+  m_errors.clear();
+  m_numWarnings = 0;
+  m_numSeveres = 0;
+}
+
 bool MainComponent::OnEvent(Event event) {
   while (m_receiverRunOutput->HasPending()) {
     std::string line;

@@ -10,7 +10,7 @@
 #include <string_view>  // For string_view
 
 namespace epcli {
-void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string> senderRunOutput, ftxui::Sender<ErrorMessage> senderErrorOutput,
+void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string>* senderRunOutput, ftxui::Sender<ErrorMessage>* senderErrorOutput,
                    std::atomic<int>* progress, ftxui::ScreenInteractive* screen);
 
 bool validateFileType(const std::filesystem::path& filePath);

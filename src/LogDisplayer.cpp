@@ -161,6 +161,12 @@ bool LogDisplayer::OnEvent(Event event) {
   if (event == Event::TabReverse && (m_size != 0)) {
     m_selected -= m_size / 10;
   }
+  if (event == Event::PageDown) {
+    m_selected += box_.y_max - box_.y_min;
+  }
+  if (event == Event::PageUp) {
+    m_selected -= box_.y_max - box_.y_min;
+  }
   if (event == Event::Home) {
     m_selected = 0;
   }

@@ -22,6 +22,8 @@ class MainComponent : public ComponentBase
   Element Render() override;
   bool OnEvent(Event event) override;
 
+  void clear_state();
+
  private:
   Receiver<std::string> m_receiverRunOutput;
   Receiver<ErrorMessage> m_receiverErrorOutput;
