@@ -25,6 +25,21 @@ struct UnmetHoursTableRow
   double duringOccCooling;
 };
 
+// template <size_t ROW_SIZE, size_t COL_SIZE>
+// struct EndUseTable
+// {
+//   std::array<std::string, ROW_SIZE> endUseNames;  // = rowNames
+//   std::array<std::string, COL_SIZE> fuelNames;    // = columnNames
+//   std::array<std::array<double, ROW_SIZE>, COL_SIZE> values;
+// }
+
+struct EndUseTable
+{
+  std::vector<std::string> endUseNames;  // = rowNames
+  std::vector<std::string> fuelNames;    // = columnNames
+  std::vector<std::vector<double>> values;
+};
+
 class SQLiteReports
 {
  public:
@@ -37,6 +52,9 @@ class SQLiteReports
   std::string energyPlusVersion() const;
   std::optional<double> netSiteEnergy() const;
   std::vector<UnmetHoursTableRow> unmetHoursTable() const;
+
+  // template <size_t ROW_SIZE, size_t COL_SIZE>
+  EndUseTable endUseByFuelTable() const;
 
  private:
   bool close();
