@@ -8,6 +8,7 @@
 #include <ftxui/component/component.hpp>
 #include <ftxui/screen/string.hpp>
 
+#include <ctre.hpp>
 #include <fmt/format.h>
 #include <fmt/std.h>
 
@@ -16,7 +17,6 @@
 #include <utility>
 #include <set>
 #include <string>
-#include <regex>
 
 using namespace ftxui;
 namespace fs = std::filesystem;
@@ -101,19 +101,19 @@ void MainComponent::reload_results() {
 
   // matches[1], warning/error type
   // matches[2], rest of line
-  std::regex warningOrError(R"(^\s*\**\s+\*\*\s*([[:alpha:]]+)\s*\*\*(.*)$)");
+  auto warningOrErrorMatcher = ctre::match<R"(^\s*\**\s+\*\*\s*([[:alpha:]]+)\s*\*\*(.*)$)">;
 
   // matches[1], rest of line
-  std::regex warningOrErrorContinue(R"(^\s*\**\s+\*\*\s*~~~\s*\*\*(.*)$)");
+  auto warningOrErrorContinueMatcher = ctre::match<R"(^\s*\**\s+\*\*\s*~~~\s*\*\*(.*)$)">;
 
   // completed successfully
-  std::regex completedSuccessful("^\\s*\\*+ EnergyPlus Completed Successfully.*");
+  auto completedSuccessfulMatcher = ctre::match<R"(^\s*\*+ EnergyPlus Completed Successfully.*)">;
 
   // ground temp completed successfully
-  std::regex groundTempCompletedSuccessful(R"(^\s*\*+ GroundTempCalc\S* Completed Successfully.*)");
+  auto groundTempCompletedSuccessfulMatcher = ctre::match<R"(^\s*\*+ GroundTempCalc\S* Completed Successfully.*)">;
 
   // completed unsuccessfully
-  std::regex completedUnsuccessful("^\\s*\\*+ EnergyPlus Terminated.*");
+  auto completedUnsuccessfulMatcher = ctre::match<R"(^\s*\*+ EnergyPlus Terminated.*)">;
 
   // repeat count
 
@@ -122,18 +122,16 @@ void MainComponent::reload_results() {
 
   while (std::getline(ifs, line)) {
 
-    std::smatch matches;
-
     EnergyPlus::Error errorType = EnergyPlus::Error::Info;
 
     std::string message;
 
-    if (std::regex_match(line, completedSuccessful) || std::regex_match(line, groundTempCompletedSuccessful)) {
+    if (completedSuccessfulMatcher(line) || groundTempCompletedSuccessfulMatcher(line)) {
       *m_progress = 100;
       m_stdout_lines.emplace_back(std::move(line));
       m_hasAlreadyRun = true;
       continue;
-    } else if (std::regex_match(line, completedUnsuccessful)) {
+    } else if (completedUnsuccessfulMatcher(line)) {
       *m_progress = -1;
       m_stdout_lines.emplace_back(std::move(line));
       m_hasAlreadyRun = false;
@@ -141,24 +139,23 @@ void MainComponent::reload_results() {
     }
 
     // parse the file
-    if (std::regex_search(line, matches, warningOrError)) {
+    if (auto [whole, warningOrErrorType, msg] = warningOrErrorMatcher(line); whole) {
 
-      std::string warningOrErrorType = std::string(matches[1].first, matches[1].second);
-      utilities::ascii_trim(warningOrErrorType);
-      message = std::string(matches[2].first, matches[2].second);
+      std::string_view warningOrErrorTypeTrim = utilities::ascii_trim(warningOrErrorType);
+      message = msg;
 
-      if (warningOrErrorType == "Fatal") {
+      if (warningOrErrorTypeTrim == "Fatal") {
         errorType = EnergyPlus::Error::Fatal;
-      } else if (warningOrErrorType == "Severe") {
+      } else if (warningOrErrorTypeTrim == "Severe") {
         errorType = EnergyPlus::Error::Severe;
         ++m_numSeveres;
-      } else if (warningOrErrorType == "Warning") {
+      } else if (warningOrErrorTypeTrim == "Warning") {
         errorType = EnergyPlus::Error::Warning;
         ++m_numWarnings;
       }
-    } else if (std::regex_search(line, matches, warningOrErrorContinue)) {
+    } else if (auto [whole, msg] = warningOrErrorContinueMatcher(line); whole) {  // cppcheck-suppress shadowVariable
       errorType = EnergyPlus::Error::Continue;
-      message = std::string(matches[1].first, matches[1].second);
+      message = msg;
     } else {
       errorType = EnergyPlus::Error::Info;
       message = line;

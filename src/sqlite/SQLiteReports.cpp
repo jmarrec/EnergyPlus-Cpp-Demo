@@ -3,14 +3,14 @@
 
 #include <sqlite3.h>
 
+#include <ctre.hpp>
+#include <fmt/format.h>
+
 #include <array>
 #include <filesystem>
 #include <optional>
-#include <regex>
 #include <string>
 #include <utility>
-
-#include <fmt/format.h>
 
 using namespace ftxui;
 
@@ -39,8 +39,8 @@ SQLiteReports::SQLiteReports(std::filesystem::path databasePath) : m_databasePat
 }
 
 bool SQLiteReports::isValidConnection() const {
-  std::string energyPlusVersion = this->energyPlusVersion();
-  return !energyPlusVersion.empty();
+  std::string version = this->energyPlusVersion();
+  return !version.empty();
 }
 
 SQLiteReports::~SQLiteReports() {
@@ -63,10 +63,8 @@ std::string SQLiteReports::energyPlusVersion() const {
       // in 8.1 this is 'EnergyPlus-Windows-32 8.1.0.008, YMD=2014.11.08 22:49'
       // in 8.2 this is 'EnergyPlus, Version 8.2.0-8397c2e30b, YMD=2015.01.09 08:37'
       // radiance script is writing 'EnergyPlus, VERSION 8.2, (OpenStudio) YMD=2015.1.9 08:35:36'
-      std::regex version_regex(R"(\d{1,}\.\d[\.\d]*)");
-      std::smatch version_match;
-      if (std::regex_search(s_.value(), version_match, version_regex)) {
-        result = version_match[0].str();
+      if (auto [whole, version] = ctre::search<R"((?<version>\d{1,}\.\d[\.\d]*))">(s_.value()); whole) {
+        result = version;
       }
     }
   }
@@ -138,7 +136,7 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
     std::string units;
   };
 
-  std::array<TableEntry, 2> entries{{
+  const std::array<TableEntry, 2> entries{{
     {"EnergyPlus Version", report.energyPlusVersion(), ""},
     {"Net Site Energy", fmt::format("{:.2f}", report.netSiteEnergy().value()), "GJ"},
   }};
@@ -148,7 +146,7 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
   size_t size_value = 30;
   size_t size_units = 15;
 
-  for (const auto& entry : entries) {
+  for (const TableEntry& entry : entries) {
     size_item = std::max(size_item, entry.item.size());
     size_value = std::max(size_value, entry.value.size());
     size_units = std::max(size_units, entry.units.size());
@@ -162,7 +160,7 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
     hcenter(text("Units")) | ftxui::size(WIDTH, EQUAL, size_units),
   });
 
-  for (const auto& entry : entries) {
+  for (const TableEntry& entry : entries) {
 
     Element document =  //
       hbox({
