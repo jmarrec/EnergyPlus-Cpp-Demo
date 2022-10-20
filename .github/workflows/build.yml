@@ -138,13 +138,13 @@ jobs:
     - name: Archive binary artifacts
       uses: actions/upload-artifact@v3
       with:
-          name: EnergyPlus-Cpp-Demo-{{ github.sha }}-${{ matrix.os }}.${{ matrix.BINARY_EXT }}
+          name: EnergyPlus-Cpp-Demo-${{ github.sha }}-${{ matrix.os }}.${{ matrix.BINARY_EXT }}
           path: build/_CPack_Packages/${{ matrix.PLATFORM_NAME }}/IFW/*.${{ matrix.BINARY_EXT }}
 
     - name: Archive TGZ artifacts
       uses: actions/upload-artifact@v3
       with:
-          name: EnergyPlus-Cpp-Demo-{{ github.sha }}-${{ matrix.os }}.tar.gz
+          name: EnergyPlus-Cpp-Demo-${{ github.sha }}-${{ matrix.os }}.tar.gz
           path: build/_CPack_Packages/${{ matrix.PLATFORM_NAME }}/IFW/*.tar.gz
 
     - name: Upload Binary installer to release
