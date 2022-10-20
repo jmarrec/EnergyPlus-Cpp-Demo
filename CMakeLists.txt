@@ -129,7 +129,7 @@ include_directories(${PROJECT_BINARY_DIR})
 
 find_package(fmt REQUIRED)
 find_package(ftxui REQUIRED)
-find_package(sqlite3 REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 ###############################################################################
 #                             E N E R G Y P L U S                             #
