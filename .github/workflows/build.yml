@@ -27,7 +27,7 @@ jobs:
         - os: macos-latest
           PLATFORM_NAME: Darwin
           BINARY_EXT: dmg
-        - os: macos-latest
+        - os: windows-latest
           PLATFORM_NAME: win64
           BINARY_EXT: exe
 
