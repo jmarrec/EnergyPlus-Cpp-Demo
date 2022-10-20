@@ -165,6 +165,10 @@ add_executable(epcli
   src/sqlite/SQLiteReports.cpp
 
   src/utilities/ASCIIStrings.hpp
+
+  # TODO: TEMP, pending new release of FTXUI
+  src/ftxui/modal.hpp
+  src/ftxui/modal.cpp
 )
 
 target_link_libraries(epcli

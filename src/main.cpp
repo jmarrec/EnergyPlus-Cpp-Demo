@@ -3,7 +3,7 @@
 #include "EnergyPlus.hpp"
 
 #include <ftxui/component/captured_mouse.hpp>      // for ftxui
-#include <ftxui/component/component.hpp>           // for Input, Renderer, Vertical
+#include "ftxui/component/component.hpp"           // for Button, operator|=, Renderer, Vertical, Modal
 #include <ftxui/component/component_base.hpp>      // for ComponentBase
 #include <ftxui/component/component_options.hpp>   //
 #include <ftxui/component/screen_interactive.hpp>  // for Component, ScreenInteractive
@@ -13,6 +13,9 @@
 #include <ftxui/screen/color.hpp>
 #include <ftxui/dom/node.hpp>
 #include <ftxui/component/receiver.hpp>
+
+// TODO: temp, FTXUI 3.0.0 doesn't include this component yet, it's only on master.
+#include "ftxui/modal.hpp"
 
 #include <algorithm>   // for min, max
 #include <atomic>      // for atomic
@@ -33,6 +36,26 @@ namespace fs = std::filesystem;
 template <typename TP>
 std::chrono::time_point<std::chrono::system_clock> to_system_clock(TP tp) {
   return std::chrono::time_point_cast<std::chrono::system_clock::duration>(tp - TP::clock::now() + std::chrono::system_clock::now());
+}
+
+// Definition of the modal component. The details are not important.
+ftxui::Component ReloadModalComponent(std::function<void()> reload_results, std::function<void()> hide_modal, const fs::path& outputDirectory) {
+  auto component = Container::Vertical({
+    ftxui::Button("Reload Results", std::move(reload_results), ftxui::ButtonOption::Animated()),
+    ftxui::Button("Start Fresh", std::move(hide_modal), ftxui::ButtonOption::Animated()),
+  });
+  // Polish how the two buttons are rendered:
+  component |= ftxui::Renderer([&](ftxui::Element inner) {
+    return vbox({
+             ftxui::text("Previous Results Found on Disk"),
+             ftxui::text(fs::absolute(outputDirectory).string()),
+             separator(),
+             std::move(inner),
+           })                                                    //
+           | ftxui::size(ftxui::WIDTH, ftxui::GREATER_THAN, 30)  //
+           | ftxui::border;                                      //
+  });
+  return component;
 }
 
 int main(int argc, const char* argv[]) {
@@ -105,11 +128,19 @@ int main(int argc, const char* argv[]) {
   main_component = std::make_shared<MainComponent>(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button),
                                                    std::move(quit_button), &progress, std::move(outputDirectory));
 
-  if (modal_reload_shown) {
+  auto hide_modal = [&modal_reload_shown] { modal_reload_shown = false; };
+  auto reload_results = [&main_component, &modal_reload_shown]() {
+    modal_reload_shown = false;
     main_component->reload_results();
-  }
+  };
 
-  screen.Loop(main_component);
+  auto modal_component = ReloadModalComponent(reload_results, hide_modal, outputDirectory);
+
+  // Use the `Modal` function to use together the main component and its modal window.
+  // The |modal_reload_shown| boolean controls whether the modal is shown or not.
+  auto composite = ftxui::Modal(main_component, modal_component, &modal_reload_shown);
+
+  screen.Loop(composite);
 
   if (runThread.joinable()) {
     runThread.join();
