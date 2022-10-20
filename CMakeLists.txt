@@ -163,6 +163,8 @@ add_executable(epcli
   src/sqlite/PreparedStatement.cpp
   src/sqlite/SQLiteReports.hpp
   src/sqlite/SQLiteReports.cpp
+
+  src/utilities/ASCIIStrings.hpp
 )
 
 target_link_libraries(epcli

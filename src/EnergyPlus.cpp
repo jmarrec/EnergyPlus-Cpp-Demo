@@ -1,4 +1,5 @@
 #include "EnergyPlus.hpp"
+#include "utilities/ASCIIStrings.hpp"
 
 #include <EnergyPlus/api/runtime.h>
 #include <EnergyPlus/api/state.h>
@@ -58,7 +59,7 @@ bool validateFileType(const std::filesystem::path& filePath) {
 
   auto const filePathStr = filePath.extension().string();
 
-  auto ext = ascii_to_lower_copy(filePathStr);
+  auto ext = utilities::ascii_to_lower_copy(filePathStr);
   return (std::find(acceptedExtensions.cbegin(), acceptedExtensions.cend(), ext) != acceptedExtensions.cend());
 }
 
