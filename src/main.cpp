@@ -136,10 +136,8 @@ int main(int argc, const char* argv[]) {
 
   auto modal_component = ReloadModalComponent(reload_results, hide_modal, outputDirectory);
 
-  // Use the `Modal` function to use together the main component and its modal
-  // window. The |modal_shown| boolean controls whether the modal is shown or
-  // not.
-  // *main_component |= ftxui::Modal(modal_component, &modal_reload_shown);
+  // Use the `Modal` function to use together the main component and its modal window.
+  // The |modal_reload_shown| boolean controls whether the modal is shown or not.
   auto composite = ftxui::Modal(main_component, modal_component, &modal_reload_shown);
 
   screen.Loop(composite);
