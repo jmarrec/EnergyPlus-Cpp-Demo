@@ -20,7 +20,7 @@ SQLiteReports::SQLiteReports(std::filesystem::path databasePath) : m_databasePat
 
   std::filesystem::copy_file(databasePath, m_databasePath, std::filesystem::copy_options::overwrite_existing);
 
-  std::string fileName = m_databasePath.make_preferred().native();
+  std::string fileName = m_databasePath.make_preferred().native().string();
 
   int code = sqlite3_open_v2(fileName.c_str(), &m_db, SQLITE_OPEN_READONLY, nullptr);
   m_connectionOpen = (code == 0);
