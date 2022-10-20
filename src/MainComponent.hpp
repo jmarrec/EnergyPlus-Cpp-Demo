@@ -27,6 +27,8 @@ class MainComponent : public ComponentBase
   void clear_state();
   bool hasAlreadyRun() const;
 
+  void reload_results();
+
  private:
   Receiver<std::string> m_receiverRunOutput;
   Receiver<ErrorMessage> m_receiverErrorOutput;

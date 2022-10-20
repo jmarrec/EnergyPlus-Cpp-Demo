@@ -1,5 +1,6 @@
 #include "MainComponent.hpp"
 #include "sqlite/SQLiteReports.hpp"
+#include "utilities/ASCIIStrings.hpp"
 
 #include <EnergyPlus/api/TypeDefs.h>
 
@@ -11,8 +12,11 @@
 #include <fmt/std.h>
 
 #include <filesystem>
+#include <fstream>
 #include <utility>
 #include <set>
+#include <string>
+#include <regex>
 
 using namespace ftxui;
 namespace fs = std::filesystem;
@@ -83,6 +87,87 @@ void MainComponent::clear_state() {
   m_numWarnings = 0;
   m_numSeveres = 0;
   m_hasAlreadyRun = false;
+}
+
+void MainComponent::reload_results() {
+  clear_state();
+
+  m_stdout_lines.emplace_back("=========================================");
+  m_stdout_lines.emplace_back("   Results have been reloaded from disk");
+  m_stdout_lines.emplace_back("=========================================");
+  m_stdout_lines.emplace_back("");
+
+  std::ifstream ifs(m_outputDirectory / "eplusout.err");
+
+  // matches[1], warning/error type
+  // matches[2], rest of line
+  std::regex warningOrError(R"(^\s*\**\s+\*\*\s*([[:alpha:]]+)\s*\*\*(.*)$)");
+
+  // matches[1], rest of line
+  std::regex warningOrErrorContinue(R"(^\s*\**\s+\*\*\s*~~~\s*\*\*(.*)$)");
+
+  // completed successfully
+  std::regex completedSuccessful("^\\s*\\*+ EnergyPlus Completed Successfully.*");
+
+  // ground temp completed successfully
+  std::regex groundTempCompletedSuccessful(R"(^\s*\*+ GroundTempCalc\S* Completed Successfully.*)");
+
+  // completed unsuccessfully
+  std::regex completedUnsuccessful("^\\s*\\*+ EnergyPlus Terminated.*");
+
+  // repeat count
+
+  // read the file line by line using regexes
+  std::string line;
+
+  while (std::getline(ifs, line)) {
+
+    std::smatch matches;
+
+    EnergyPlus::Error errorType = EnergyPlus::Error::Info;
+
+    std::string message;
+
+    if (std::regex_match(line, completedSuccessful) || std::regex_match(line, groundTempCompletedSuccessful)) {
+      *m_progress = 100;
+      m_stdout_lines.emplace_back(std::move(line));
+      m_hasAlreadyRun = true;
+      continue;
+    } else if (std::regex_match(line, completedUnsuccessful)) {
+      *m_progress = -1;
+      m_stdout_lines.emplace_back(std::move(line));
+      m_hasAlreadyRun = false;
+      continue;
+    }
+
+    // parse the file
+    if (std::regex_search(line, matches, warningOrError)) {
+
+      std::string warningOrErrorType = std::string(matches[1].first, matches[1].second);
+      utilities::ascii_trim(warningOrErrorType);
+      message = std::string(matches[2].first, matches[2].second);
+
+      if (warningOrErrorType == "Fatal") {
+        errorType = EnergyPlus::Error::Fatal;
+      } else if (warningOrErrorType == "Severe") {
+        errorType = EnergyPlus::Error::Severe;
+        ++m_numSeveres;
+      } else if (warningOrErrorType == "Warning") {
+        errorType = EnergyPlus::Error::Warning;
+        ++m_numWarnings;
+      }
+    } else if (std::regex_search(line, matches, warningOrErrorContinue)) {
+      errorType = EnergyPlus::Error::Continue;
+      message = std::string(matches[1].first, matches[1].second);
+    } else {
+      errorType = EnergyPlus::Error::Info;
+      message = line;
+    }
+
+    utilities::ascii_trim(message);
+    RegisterLogLevel(errorType);
+    m_errors.emplace_back(errorType, std::move(message));
+  }
 }
 
 bool MainComponent::hasAlreadyRun() const {
