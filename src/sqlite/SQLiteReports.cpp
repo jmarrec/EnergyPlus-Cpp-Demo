@@ -35,7 +35,7 @@ SQLiteReports::SQLiteReports(std::filesystem::path databasePath) : m_databasePat
     throw std::runtime_error("epcli is not compatible with this file.");
   }
   // set a 1 second timeout
-  code = sqlite3_busy_timeout(m_db, 1000);
+  // sqlite3_busy_timeout(m_db, 1000);
 }
 
 bool SQLiteReports::isValidConnection() const {
@@ -129,7 +129,7 @@ SELECT Value FROM TabularDataWithStrings
 
 }  // namespace sql
 
-ftxui::Element RenderHighLevelInfo(sql::SQLiteReports& report) {
+ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
 
   struct TableEntry
   {
@@ -184,7 +184,7 @@ ftxui::Element RenderHighLevelInfo(sql::SQLiteReports& report) {
                                           }));
 }
 
-ftxui::Element RenderUnmetHours(sql::SQLiteReports& report) {
+ftxui::Element RenderUnmetHours(const sql::SQLiteReports& report) {
   auto tableData = report.unmetHoursTable();
 
   std::array<size_t, sql::UnmetHoursTableRow::headers.size() + 1> col_sizes{};
