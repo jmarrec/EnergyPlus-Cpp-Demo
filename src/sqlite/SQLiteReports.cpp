@@ -12,6 +12,8 @@
 
 #include <fmt/format.h>
 
+using namespace ftxui;
+
 namespace sql {
 
 SQLiteReports::SQLiteReports(std::filesystem::path databasePath) : m_databasePath(std::filesystem::temp_directory_path() / "eplusout.sql") {
@@ -84,13 +86,50 @@ std::optional<double> SQLiteReports::netSiteEnergy() const {
   return stmt.execAndReturnFirstDouble();
 }
 
+std::vector<UnmetHoursTableRow> SQLiteReports::unmetHoursTable() const {
+
+  std::vector<UnmetHoursTableRow> result;
+
+  auto zoneNames_ =  //
+    PreparedStatement{R"sql(SELECT DISTINCT(RowName) FROM TabularDataWithStrings
+    WHERE ReportName='SystemSummary'
+    AND ReportForString='Entire Facility'
+    AND TableName='Time Setpoint Not Met';)sql",
+                      m_db, false}
+      .execAndReturnVectorOfString();
+
+  if (!zoneNames_.has_value()) {
+    return result;
+  }
+
+  PreparedStatement stmt(R"sql(
+SELECT Value FROM TabularDataWithStrings
+    WHERE ReportName='SystemSummary'
+    AND ReportForString='Entire Facility'
+    AND TableName='Time Setpoint Not Met'
+    AND RowName=?
+    AND ColumnName=?;
+  )sql",
+                         m_db, false);
+
+  for (const auto& zoneName : zoneNames_.value()) {
+    std::array<double, 4> vals{};
+    for (int i = 0; auto colName : UnmetHoursTableRow::headers) {
+      stmt.bind(1, zoneName);
+      stmt.bind(2, std::string{colName});
+      if (auto val_ = stmt.execAndReturnFirstDouble()) {
+        vals[i] = val_.value();
+      }
+    }
+    result.emplace_back(zoneName, vals);
+  }
+
+  return result;
+}
+
 }  // namespace sql
 
-ftxui::Element SQLiteComponent::RenderDatabase(std::filesystem::path databasePath) {
-
-  sql::SQLiteReports m_report(std::move(databasePath));
-
-  using namespace ftxui;
+ftxui::Element RenderHighLevelInfo(sql::SQLiteReports& report) {
 
   struct TableEntry
   {
@@ -100,8 +139,8 @@ ftxui::Element SQLiteComponent::RenderDatabase(std::filesystem::path databasePat
   };
 
   std::array<TableEntry, 2> entries{{
-    {"EnergyPlus Version", m_report.energyPlusVersion(), ""},
-    {"Net Site Energy", fmt::format("{:.2f}", m_report.netSiteEnergy().value()), "GJ"},
+    {"EnergyPlus Version", report.energyPlusVersion(), ""},
+    {"Net Site Energy", fmt::format("{:.2f}", report.netSiteEnergy().value()), "GJ"},
   }};
 
   Elements elementList;
@@ -121,7 +160,6 @@ ftxui::Element SQLiteComponent::RenderDatabase(std::filesystem::path databasePat
     hcenter(text("Value")) | flex | ftxui::size(WIDTH, GREATER_THAN, size_value),
     separator(),
     hcenter(text("Units")) | ftxui::size(WIDTH, EQUAL, size_units),
-
   });
 
   for (const auto& entry : entries) {
@@ -139,9 +177,73 @@ ftxui::Element SQLiteComponent::RenderDatabase(std::filesystem::path databasePat
     elementList.push_back(separator());
   }
 
-  return window(text(L"SQLite Values"), vbox({
-                                          header,  //
-                                          separator(),
-                                          vbox(elementList) | vscroll_indicator | yframe,  //  | reflect(box_),
-                                        }));
+  return window(text(L"High Level Info"), vbox({
+                                            header,  //
+                                            separator(),
+                                            vbox(elementList) | vscroll_indicator | yframe,  //  | reflect(box_),
+                                          }));
+}
+
+ftxui::Element RenderUnmetHours(sql::SQLiteReports& report) {
+  auto tableData = report.unmetHoursTable();
+
+  std::array<size_t, sql::UnmetHoursTableRow::headers.size() + 1> col_sizes{};
+
+  col_sizes[0] = 20;
+  for (auto& tableRow : tableData) {
+    col_sizes[0] = std::max(col_sizes[0], tableRow.zoneName.size());
+  }
+
+  Elements headerList;
+  headerList.emplace_back(text("Zone Name") | flex);
+  headerList.emplace_back(separator());
+  for (size_t i = 1; auto colName : sql::UnmetHoursTableRow::headers) {
+    col_sizes[i] = colName.size();
+    headerList.emplace_back(text(std::string{colName})                 //
+                            | ftxui::size(WIDTH, EQUAL, col_sizes[i])  //
+    );
+    if (i < sql::UnmetHoursTableRow::headers.size()) {
+      headerList.emplace_back(separator());
+    }
+    ++i;
+  }
+
+  auto header = hbox(headerList);
+
+  auto format_double = [](double d) { return fmt::format("{:.2f}", d); };
+
+  Elements rowList;
+  for (size_t i = 0; auto& tableRow : tableData) {
+    Element document =  //
+      hbox({
+        hcenter(text(tableRow.zoneName)) | flex,  //| ftxui::size(WIDTH, EQUAL, size_item),
+        separator(),
+        hcenter(text(format_double(tableRow.duringHeating))) | ftxui::size(WIDTH, EQUAL, col_sizes[1]),
+        separator(),
+        hcenter(text(format_double(tableRow.duringCooling))) | ftxui::size(WIDTH, EQUAL, col_sizes[2]),
+        separator(),
+        hcenter(text(format_double(tableRow.duringOccHeating))) | ftxui::size(WIDTH, EQUAL, col_sizes[3]),
+        separator(),
+        hcenter(text(format_double(tableRow.duringOccCooling))) | ftxui::size(WIDTH, EQUAL, col_sizes[4]),
+      })
+      | flex;
+    rowList.push_back(document);
+    rowList.push_back(separator());
+    if (i == tableData.size() - 2) {
+      rowList.push_back(separator());
+    }
+    ++i;
+  }
+
+  return window(text(L"Unmet Hours"), vbox({
+                                        header,  //
+                                        separator(),
+                                        vbox(rowList) | vscroll_indicator | yframe,  //  | reflect(box_),
+                                      }));
+}
+
+ftxui::Element SQLiteComponent::RenderDatabase(std::filesystem::path databasePath) {
+  sql::SQLiteReports report(std::move(databasePath));
+
+  return vbox({RenderHighLevelInfo(report), RenderUnmetHours(report)});
 }

@@ -3,12 +3,27 @@
 
 #include <ftxui/component/component.hpp>
 
+#include <array>
 #include <filesystem>
 #include <optional>
+#include <string_view>
 
 struct sqlite3;
 
 namespace sql {
+
+struct UnmetHoursTableRow
+{
+  static constexpr std::array<std::string_view, 4> headers = {"During Heating", "During Cooling", "During Occupied Heating",
+                                                              "During Occupied Cooling"};
+  UnmetHoursTableRow(std::string t_zoneName, std::array<double, 4>& vals)
+    : zoneName(std::move(t_zoneName)), duringHeating(vals[0]), duringCooling(vals[1]), duringOccHeating(vals[2]), duringOccCooling(vals[3]) {}
+  std::string zoneName;
+  double duringHeating;
+  double duringCooling;
+  double duringOccHeating;
+  double duringOccCooling;
+};
 
 class SQLiteReports
 {
@@ -21,6 +36,7 @@ class SQLiteReports
 
   std::string energyPlusVersion() const;
   std::optional<double> netSiteEnergy() const;
+  std::vector<UnmetHoursTableRow> unmetHoursTable() const;
 
  private:
   bool close();
