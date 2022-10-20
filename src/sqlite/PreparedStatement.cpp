@@ -71,6 +71,7 @@ std::optional<double> PreparedStatement::execAndReturnFirstDouble() const {
       value = sqlite3_column_double(m_statement, 0);
     }
   }
+  sqlite3_reset(m_statement);
   return value;
 }
 
@@ -82,6 +83,7 @@ std::optional<int> PreparedStatement::execAndReturnFirstInt() const {
       value = sqlite3_column_int(m_statement, 0);
     }
   }
+  sqlite3_reset(m_statement);
   return value;
 }
 
@@ -93,6 +95,7 @@ std::optional<std::string> PreparedStatement::execAndReturnFirstString() const {
       value = columnText(sqlite3_column_text(m_statement, 0));
     }
   }
+  sqlite3_reset(m_statement);
   return value;
 }
 
@@ -120,6 +123,7 @@ std::optional<std::vector<double>> PreparedStatement::execAndReturnVectorOfDoubl
 
     }  // end loop
   }
+  sqlite3_reset(m_statement);
 
   return valueVector;
 }
@@ -147,6 +151,7 @@ std::optional<std::vector<int>> PreparedStatement::execAndReturnVectorOfInt() co
 
     }  // end loop
   }
+  sqlite3_reset(m_statement);
 
   return valueVector;
 }
@@ -174,6 +179,7 @@ std::optional<std::vector<std::string>> PreparedStatement::execAndReturnVectorOf
 
     }  // end loop
   }
+  sqlite3_reset(m_statement);
   return valueVector;
 }
 

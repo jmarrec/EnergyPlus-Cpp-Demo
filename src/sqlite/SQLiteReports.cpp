@@ -1,6 +1,7 @@
 #include "PreparedStatement.hpp"
 #include "SQLiteReports.hpp"
 
+#include <ftxui/component/component.hpp>
 #include <sqlite3.h>
 
 #include <ctre.hpp>
@@ -125,6 +126,115 @@ SELECT Value FROM TabularDataWithStrings
   return result;
 }
 
+EndUseTable SQLiteReports::endUseByFuelTable() const {
+
+  EndUseTable result;
+
+  double threshold = 0.1;
+
+  auto endUsesNames_ =  //
+    PreparedStatement{R"sql(SELECT DISTINCT(RowName) FROM TabularDataWithStrings
+            WHERE ReportName='AnnualBuildingUtilityPerformanceSummary'
+            AND ReportForString='Entire Facility'
+            AND TableName='End Uses';)sql",
+                      m_db, false}
+      .execAndReturnVectorOfString();
+
+  auto fuelNames_ =  //
+    PreparedStatement{R"sql(SELECT DISTINCT(ColumnName) FROM TabularDataWithStrings
+            WHERE ReportName='AnnualBuildingUtilityPerformanceSummary'
+            AND ReportForString='Entire Facility'
+            AND TableName='End Uses';)sql",
+                      m_db, false}
+      .execAndReturnVectorOfString();
+
+  if (!endUsesNames_.has_value() || !fuelNames_.has_value()) {
+    return result;
+  }
+
+  auto& fuelNames = result.fuelNames;
+  fuelNames.reserve(fuelNames_->size());
+
+  {
+    // Capture only the fuels for which we have non zero data
+    PreparedStatement stmt_total_for_fuel(R"sql(
+    SELECT Value FROM TabularDataWithStrings
+      WHERE ReportName='AnnualBuildingUtilityPerformanceSummary'
+      AND ReportForString='Entire Facility'
+      AND TableName='End Uses'
+      AND RowName='Total End Uses'
+      AND ColumnName=?;)sql",
+                                          m_db, false);
+
+    for (const auto& fuelName : fuelNames_.value()) {
+      stmt_total_for_fuel.bind(1, fuelName);
+      if (auto val_ = stmt_total_for_fuel.execAndReturnFirstDouble(); val_ && val_.value() > threshold) {
+        fuelNames.emplace_back(fuelName);
+      }
+    }
+  }
+
+  auto& endUsesNames = result.endUseNames;
+  endUsesNames.reserve(endUsesNames_->size());
+
+  {
+    // Capture only the end uses for which we have non zero data
+    PreparedStatement stmt_total_for_end_use(R"sql(
+    SELECT SUM(Value) FROM TabularDataWithStrings
+      WHERE ReportName='AnnualBuildingUtilityPerformanceSummary'
+      AND ReportForString='Entire Facility'
+      AND TableName='End Uses'
+      AND RowName=?;)sql",
+                                             m_db, false);
+
+    for (const auto& endUsesName : endUsesNames_.value()) {
+      stmt_total_for_end_use.bind(1, endUsesName);
+      if (auto val_ = stmt_total_for_end_use.execAndReturnFirstDouble(); val_ && val_.value() > threshold) {
+        endUsesNames.emplace_back(endUsesName);
+      }
+    }
+  }
+
+  auto& values = result.values;
+  values.reserve(endUsesNames.size());
+
+  PreparedStatement stmt_each(R"sql(
+    SELECT Value FROM TabularDataWithStrings
+      WHERE ReportName='AnnualBuildingUtilityPerformanceSummary'
+      AND ReportForString='Entire Facility'
+      AND TableName='End Uses'
+      AND RowName=?
+      AND ColumnName=?;)sql",
+                              m_db, false);
+
+  for (const auto& endUsesName : endUsesNames) {
+    stmt_each.bind(1, endUsesName);
+    auto& rowValues = values.emplace_back();
+    rowValues.reserve(fuelNames.size());
+    for (const auto& fuelName : fuelNames) {
+      stmt_each.bind(2, fuelName);
+      rowValues.emplace_back(stmt_each.execAndReturnFirstDouble().value_or(0.0));
+    }
+  }
+
+  {
+    PreparedStatement stmt_units(R"sql(
+      SELECT DISTINCT(Units)
+        FROM TabularDataWithStrings
+        WHERE ReportName='AnnualBuildingUtilityPerformanceSummary'
+        AND ReportForString='Entire Facility'
+        AND TableName='End Uses'
+        AND ColumnName=?;)sql",
+                                 m_db, false);
+    for (auto& fuelName : fuelNames) {
+      stmt_units.bind(1, fuelName);
+      fuelName += " [" + stmt_units.execAndReturnFirstString().value_or("") + "]";
+    }
+  }
+
+  return result;
+}
+
 }  // namespace sql
 
 ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
@@ -212,6 +322,9 @@ ftxui::Element RenderUnmetHours(const sql::SQLiteReports& report) {
 
   Elements rowList;
   for (size_t i = 0; auto& tableRow : tableData) {
+    if (tableRow.zoneName.empty()) {
+      continue;
+    }
     Element document =  //
       hbox({
         hcenter(text(tableRow.zoneName)) | flex,  //| ftxui::size(WIDTH, EQUAL, size_item),
@@ -240,8 +353,70 @@ ftxui::Element RenderUnmetHours(const sql::SQLiteReports& report) {
                                       }));
 }
 
+ftxui::Element RenderEndUseByFuel(const sql::SQLiteReports& report) {
+
+  auto tableData = report.endUseByFuelTable();
+
+  std::vector<size_t> col_sizes;
+  col_sizes.resize(tableData.fuelNames.size() + 1);
+
+  col_sizes[0] = 20;
+  for (auto& idx : tableData.endUseNames) {
+    col_sizes[0] = std::max(col_sizes[0], idx.size());
+  }
+
+  Elements headerList;
+  headerList.emplace_back(text("End Use") | ftxui::size(WIDTH, EQUAL, col_sizes[0]));
+  headerList.emplace_back(separator());
+  for (size_t i = 1; const auto& colName : tableData.fuelNames) {
+    col_sizes[i] = colName.size();
+    headerList.emplace_back(text(std::string{colName})                 //
+                            | ftxui::size(WIDTH, EQUAL, col_sizes[i])  //
+    );
+    if (i < tableData.fuelNames.size()) {
+      headerList.emplace_back(separator());
+    }
+    ++i;
+  }
+
+  auto header = hbox(headerList);
+
+  auto format_double = [](double d) { return fmt::format("{:.2f}", d); };
+
+  Elements rowList;
+  for (size_t i = 0; const auto& tableRow : tableData.values) {
+    Elements row;
+    auto& endUsesName = tableData.endUseNames[i];
+    row.emplace_back(text(endUsesName) | ftxui::size(WIDTH, EQUAL, col_sizes[0]));
+    row.emplace_back(separator());
+    for (size_t j = 1; const auto& val : tableRow) {
+      row.emplace_back(hcenter(text(format_double(val))) | ftxui::size(WIDTH, EQUAL, col_sizes[j]));
+      if (j < tableRow.size()) {
+        row.emplace_back(separator());
+      }
+      ++j;
+    }
+    rowList.push_back(hbox(row));
+    rowList.push_back(separator());
+    ++i;
+  }
+
+  return window(text(L"End Use by Fuel"), vbox({
+                                            header,  //
+                                            separator(),
+                                            vbox(rowList) | vscroll_indicator | yframe,  //  | reflect(box_),
+                                          }));
+}
+
 ftxui::Element SQLiteComponent::RenderDatabase(std::filesystem::path databasePath) {
   sql::SQLiteReports report(std::move(databasePath));
 
-  return vbox({RenderHighLevelInfo(report), RenderUnmetHours(report)});
+  // TODO maybe at some point figure out how to make this work
+  // auto layout = Container::Vertical({
+  //   Collapsible("High Level Info",RenderHighLevelInfo(report)),
+  //   Collapsible("Unmet Hours",RenderUnmetHours(report)),
+  //   Collapsible("End Use by Fuel", RenderEndUseByFuel(report)),
+  // });
+
+  return vbox({RenderHighLevelInfo(report), RenderUnmetHours(report), RenderEndUseByFuel(report)});
 }
