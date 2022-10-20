@@ -18,6 +18,7 @@
 #include <atomic>      // for atomic
 #include <chrono>      // for operator""s, chrono_literals
 #include <filesystem>  // for path
+#include <utility>
 
 #include <fmt/format.h>
 #include <fmt/chrono.h>
@@ -35,6 +36,9 @@ std::chrono::time_point<std::chrono::system_clock> to_system_clock(TP tp) {
 }
 
 int main(int argc, const char* argv[]) {
+
+  // State of the application:
+  bool modal_reload_shown = false;
 
   fs::path filePath;
 
@@ -56,6 +60,9 @@ int main(int argc, const char* argv[]) {
       break;
     }
   }
+  if (fs::is_regular_file(outputDirectory / "eplusout.err")) {
+    modal_reload_shown = true;
+  }
 
   /* std::chrono::time_point<std::chrono::file_clock> */ auto lastWriteTime = fs::last_write_time(filePath);
 
@@ -68,7 +75,7 @@ int main(int argc, const char* argv[]) {
 
   std::atomic<int> progress = 0;
 
-  std::shared_ptr<MainComponent> component;
+  std::shared_ptr<MainComponent> main_component;
 
   std::string run_text = "Run " + filePath.string();
   std::thread runThread;
@@ -78,7 +85,7 @@ int main(int argc, const char* argv[]) {
       if (runThread.joinable()) {
         runThread.join();
       }
-      if (component != nullptr && component->hasAlreadyRun()) {
+      if (main_component != nullptr && main_component->hasAlreadyRun()) {
         fs::file_time_type newWriteTime = fs::last_write_time(filePath);
         if (newWriteTime <= lastWriteTime) {
           senderRunOutput->Send("--------------------------------------------------------------------------");
@@ -86,7 +93,7 @@ int main(int argc, const char* argv[]) {
                                             to_system_clock(lastWriteTime)));
           return;
         }
-        component->clear_state();
+        main_component->clear_state();
       }
       runThread = std::thread(epcli::runEnergyPlus, argc, argv, &senderRunOutput, &senderErrorOutput, &progress, &screen);
     },
@@ -95,10 +102,14 @@ int main(int argc, const char* argv[]) {
   std::string quit_text = "Quit";
   auto quit_button = ftxui::Button(&quit_text, screen.ExitLoopClosure(), ftxui::ButtonOption::Ascii());
 
-  component = std::make_shared<MainComponent>(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button),
-                                              std::move(quit_button), &progress, std::move(outputDirectory));
+  main_component = std::make_shared<MainComponent>(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button),
+                                                   std::move(quit_button), &progress, std::move(outputDirectory));
 
-  screen.Loop(component);
+  if (modal_reload_shown) {
+    main_component->reload_results();
+  }
+
+  screen.Loop(main_component);
 
   if (runThread.joinable()) {
     runThread.join();

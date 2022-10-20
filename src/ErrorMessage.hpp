@@ -7,6 +7,8 @@
 
 struct ErrorMessage
 {
+  ErrorMessage() = default;
+  ErrorMessage(EnergyPlus::Error t_error, std::string t_message) : error(t_error), message(std::move(t_message)) {}
   EnergyPlus::Error error;
   std::string message;
 
