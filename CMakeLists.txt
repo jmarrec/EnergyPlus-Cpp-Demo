@@ -130,6 +130,7 @@ include_directories(${PROJECT_BINARY_DIR})
 find_package(fmt REQUIRED)
 find_package(ftxui REQUIRED)
 find_package(SQLite3 REQUIRED)
+find_package(ctre REQUIRED)
 
 ###############################################################################
 #                             E N E R G Y P L U S                             #
@@ -180,6 +181,7 @@ target_link_libraries(epcli
   # ftxui::component
   ftxui::ftxui
   SQLite::SQLite3
+  ctre::ctre
   energyplus::energyplusapi
 )
 
