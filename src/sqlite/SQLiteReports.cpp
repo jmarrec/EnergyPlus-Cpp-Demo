@@ -3,14 +3,14 @@
 
 #include <sqlite3.h>
 
+#include <ctre.hpp>
+#include <fmt/format.h>
+
 #include <array>
 #include <filesystem>
 #include <optional>
-#include <regex>
 #include <string>
 #include <utility>
-
-#include <fmt/format.h>
 
 using namespace ftxui;
 
@@ -63,10 +63,8 @@ std::string SQLiteReports::energyPlusVersion() const {
       // in 8.1 this is 'EnergyPlus-Windows-32 8.1.0.008, YMD=2014.11.08 22:49'
       // in 8.2 this is 'EnergyPlus, Version 8.2.0-8397c2e30b, YMD=2015.01.09 08:37'
       // radiance script is writing 'EnergyPlus, VERSION 8.2, (OpenStudio) YMD=2015.1.9 08:35:36'
-      std::regex version_regex(R"(\d{1,}\.\d[\.\d]*)");
-      std::smatch version_match;
-      if (std::regex_search(s_.value(), version_match, version_regex)) {
-        result = version_match[0].str();
+      if (auto [whole, version] = ctre::search<R"((?<version>\d{1,}\.\d[\.\d]*))">(s_.value()); whole) {
+        result = version;
       }
     }
   }
