@@ -153,7 +153,7 @@ void MainComponent::reload_results() {
         errorType = EnergyPlus::Error::Warning;
         ++m_numWarnings;
       }
-    } else if (auto [whole, msg] = warningOrErrorContinueMatcher(line); whole) {
+    } else if (auto [whole, msg] = warningOrErrorContinueMatcher(line); whole) {  // cppcheck-suppress shadowVariable
       errorType = EnergyPlus::Error::Continue;
       message = msg;
     } else {

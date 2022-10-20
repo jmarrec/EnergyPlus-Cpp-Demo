@@ -39,8 +39,8 @@ SQLiteReports::SQLiteReports(std::filesystem::path databasePath) : m_databasePat
 }
 
 bool SQLiteReports::isValidConnection() const {
-  std::string energyPlusVersion = this->energyPlusVersion();
-  return !energyPlusVersion.empty();
+  std::string version = this->energyPlusVersion();
+  return !version.empty();
 }
 
 SQLiteReports::~SQLiteReports() {
@@ -136,7 +136,7 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
     std::string units;
   };
 
-  std::array<TableEntry, 2> entries{{
+  const std::array<TableEntry, 2> entries{{
     {"EnergyPlus Version", report.energyPlusVersion(), ""},
     {"Net Site Energy", fmt::format("{:.2f}", report.netSiteEnergy().value()), "GJ"},
   }};
@@ -146,7 +146,7 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
   size_t size_value = 30;
   size_t size_units = 15;
 
-  for (const auto& entry : entries) {
+  for (const TableEntry& entry : entries) {
     size_item = std::max(size_item, entry.item.size());
     size_value = std::max(size_value, entry.value.size());
     size_units = std::max(size_units, entry.units.size());
@@ -160,7 +160,7 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
     hcenter(text("Units")) | ftxui::size(WIDTH, EQUAL, size_units),
   });
 
-  for (const auto& entry : entries) {
+  for (const TableEntry& entry : entries) {
 
     Element document =  //
       hbox({
