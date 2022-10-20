@@ -7,6 +7,7 @@
 #include <ctre.hpp>
 #include <fmt/format.h>
 
+#include <algorithm>
 #include <array>
 #include <filesystem>
 #include <optional>

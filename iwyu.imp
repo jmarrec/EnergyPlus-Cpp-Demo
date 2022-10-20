@@ -6,4 +6,12 @@
   { include: ["<ctre/first.hpp>", "private", "<ctre.hpp>", "public"]},
   { include: ["<ctre/return_type.hpp>", "private", "<ctre.hpp>", "public"]},
   { include: ["<ctre/wrapper.hpp>", "private", "<ctre.hpp>", "public"]},
+
+  # Iwui is very broken on AppleClang 14.0
+  { include: ["@<__algorithm/.*>", "private", "<algorithm>", "public"]},
+  { include: ["@<__chrono/.*>", "private", "<chrono>", "public"]},
+  { include: ["@<__functional/.*>", "private", "<functional>", "public"]},
+  { include: ["@<__memory/.*>", "private", "<memory>", "public"]},
+  { include: ["@<__utility/.*>", "private", "<utility>", "public"]},
+  { include: ["@<__filesystem/.*>", "private", "<filesystem>", "public"]},
 ]

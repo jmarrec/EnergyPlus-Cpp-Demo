@@ -1,10 +1,12 @@
-#include <ftxui/component/event.hpp>  // for Event
-#include <ftxui/dom/elements.hpp>     // for operator|, Element, center, clear_under, dbox
-#include <memory>                     // for __shared_ptr_access, shared_ptr
-#include <utility>                    // for move
+#include "modal.hpp"
 
-#include "ftxui/component/component.hpp"       // for Make, Tab, ComponentDecorator, Modal
-#include "ftxui/component/component_base.hpp"  // for Component, ComponentBase
+#include <ftxui/component/component.hpp>       // for Make, Tab, ComponentDecorator, Modal
+#include <ftxui/component/component_base.hpp>  // for Component, ComponentBase
+#include <ftxui/component/event.hpp>           // for Event
+#include <ftxui/dom/elements.hpp>              // for operator|, Element, center, clear_under, dbox
+
+#include <memory>   // for __shared_ptr_access, shared_ptr
+#include <utility>  // for move
 
 namespace ftxui {
 
