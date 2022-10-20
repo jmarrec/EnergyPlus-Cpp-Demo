@@ -92,6 +92,11 @@ void MainComponent::clear_state() {
 void MainComponent::reload_results() {
   clear_state();
 
+  m_stdout_lines.emplace_back("=========================================");
+  m_stdout_lines.emplace_back("   Results have been reloaded from disk");
+  m_stdout_lines.emplace_back("=========================================");
+  m_stdout_lines.emplace_back("");
+
   std::ifstream ifs(m_outputDirectory / "eplusout.err");
 
   // matches[1], warning/error type
