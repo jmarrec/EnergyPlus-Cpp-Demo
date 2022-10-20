@@ -358,7 +358,7 @@ ftxui::Element RenderEndUseByFuel(const sql::SQLiteReports& report) {
   auto tableData = report.endUseByFuelTable();
 
   std::vector<size_t> col_sizes;
-  col_sizes.reserve(tableData.fuelNames.size() + 1);
+  col_sizes.resize(tableData.fuelNames.size() + 1);
 
   col_sizes[0] = 20;
   for (auto& idx : tableData.endUseNames) {
