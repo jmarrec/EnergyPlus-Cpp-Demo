@@ -1,0 +1,9 @@
+[
+  { include: ["<gtest/gtest-message.h>", "private", "<gtest/gtest.h>", "public"]},
+  { include: ["<gtest/gtest-test-part.h>", "private", "<gtest/gtest.h>", "public"]},
+  { include: ["<gtest/gtest_pred_impl.h>", "private", "<gtest/gtest.h>", "public"]},
+
+  { include: ["<ctre/first.hpp>", "private", "<ctre.hpp>", "public"]},
+  { include: ["<ctre/return_type.hpp>", "private", "<ctre.hpp>", "public"]},
+  { include: ["<ctre/wrapper.hpp>", "private", "<ctre.hpp>", "public"]},
+]
