@@ -1,4 +1,5 @@
 #include "MainComponent.hpp"
+#include "sqlite/SQLiteReports.hpp"
 
 #include <EnergyPlus/api/TypeDefs.h>
 
@@ -66,6 +67,8 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
             container_level_filter_,
             m_error_displayer,
           }),
+          // Sqlite reports
+          m_sqlite_component,
           // About
           info_component_,
         },
@@ -168,6 +171,7 @@ Element MainComponent::Render() {
         return ftxui::text("Pending") | color(Color::Blue);
       }
     };
+
     auto runGaugeRow = ftxui::hbox({
       text("Status"),
       separator(),
@@ -179,6 +183,7 @@ Element MainComponent::Render() {
       text(fmt::format("{} warnings", m_numWarnings)) | ((m_numWarnings > 0) ? color(Color::Yellow) : color(Color::GrayLight)),
       separator(),
       text(fmt::format("{} severes", m_numSeveres)) | ((m_numWarnings > 0) ? color(Color::Red) : color(Color::GrayLight)),
+
     });
 
     // Stdout
@@ -247,6 +252,52 @@ Element MainComponent::Render() {
           filler(),
         }) | notflex,
         m_error_displayer->RenderLines(filtered_errorMsgs) | flex_shrink,
+      });
+  }
+
+  if (tab_selected_ == 2) {
+
+    auto header = hbox({
+      text(programName),
+      filler(),
+      separator(),
+      hcenter(toggle_->Render()) | color(Color::Yellow),
+      separator(),
+      text(to_wstring(current_line + 1)),
+      text(L"/"),
+      text(to_wstring(m_stdout_lines.size())),
+      separator(),
+      gauge(float(current_line) / float(std::max(1, (int)m_stdout_lines.size() - 1))) | color(Color::GrayDark),
+      separator(),
+      spinner(5, i++),
+      m_quitButton->Render(),
+    });
+
+    Element content = text("NOTHING TO SHOW");
+
+    if (*m_progress == 100) {
+      fs::path databasePath = m_outputDirectory / "eplusout.sql";
+      if (fs::is_regular_file(databasePath)) {
+        content = m_sqlite_component->RenderDatabase(std::move(databasePath));
+      } else {
+        content = vbox({
+          text(fmt::format("The Run appears to have been successful but I cannot find the SQLFile at {}", fs::weakly_canonical(databasePath))),
+          text("Try adding the following to your IDF:"),
+          separator(),
+          text("  Output:SQLite,"),
+          text("     SimpleAndTabular;"),
+          separator(),
+        });
+      }
+    }
+
+    return  //
+      vbox({
+        header,
+        separator(),
+        filler(),
+        content | center,
+        filler(),
       });
   }
 
