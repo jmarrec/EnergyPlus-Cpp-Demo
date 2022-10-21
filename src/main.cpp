@@ -13,7 +13,6 @@
                                                    //
 #include <atomic>                                  // for atomic
 #include <chrono>                                  // for system_clock, duration, time_point
-#include <compare>                                 // for operator<=, strong_ordering
 #include <filesystem>                              // for path, absolute, is_regular_file, last_write_time, file_time_type, operator/
 #include <functional>                              // for function
 #include <memory>                                  // for allocator, shared_ptr
