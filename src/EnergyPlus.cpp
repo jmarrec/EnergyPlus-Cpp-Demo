@@ -19,8 +19,9 @@
 
 namespace epcli {
 
-void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string>* senderRunOutput, ftxui::Sender<ErrorMessage>* senderErrorOutput,
-                   std::atomic<int>* progress, ftxui::ScreenInteractive* screen) {
+void runEnergyPlus(int argc, const char* argv[],  // NOLINT(modernize-avoid-c-arrays)
+                   ftxui::Sender<std::string>* senderRunOutput, ftxui::Sender<ErrorMessage>* senderErrorOutput, std::atomic<int>* progress,
+                   ftxui::ScreenInteractive* screen) {
 
   EnergyPlusState state = stateNew();
   setEnergyPlusRootDirectory(state, ENERGYPLUS_ROOT);
@@ -50,7 +51,7 @@ void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string>* sen
     screen->PostEvent(ftxui::Event::Custom);
   });
 
-  int success = energyplus(state, argc, argv);
+  const int success = energyplus(state, argc, argv);
   if (success == 0) {
     *progress = 100;
   } else {

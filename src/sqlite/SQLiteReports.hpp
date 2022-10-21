@@ -73,7 +73,7 @@ class SQLiteComponent : public ftxui::ComponentBase
 {
  public:
   SQLiteComponent() = default;
-  ftxui::Element RenderDatabase(std::filesystem::path databasePath);
+  static ftxui::Element RenderDatabase(std::filesystem::path databasePath);
   virtual bool Focusable() const override {
     return true;
   };

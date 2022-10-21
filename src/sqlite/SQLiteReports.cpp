@@ -19,13 +19,15 @@ using namespace ftxui;
 
 namespace sql {
 
-SQLiteReports::SQLiteReports(std::filesystem::path databasePath) : m_databasePath(std::filesystem::temp_directory_path() / "eplusout.sql") {
+SQLiteReports::SQLiteReports(std::filesystem::path databasePath)  // NOLINT(performance-unnecessary-value-param)
+  : m_db(nullptr), m_databasePath(std::filesystem::temp_directory_path() / "eplusout.sql") {
 
+  // TODO: currently I have to copy it to a temporary directory because it's still in use and locked:
   std::filesystem::copy_file(databasePath, m_databasePath, std::filesystem::copy_options::overwrite_existing);
 
   std::string fileName = m_databasePath.make_preferred().string();
 
-  int code = sqlite3_open_v2(fileName.c_str(), &m_db, SQLITE_OPEN_READONLY, nullptr);
+  const int code = sqlite3_open_v2(fileName.c_str(), &m_db, SQLITE_OPEN_READONLY, nullptr);
   m_connectionOpen = (code == 0);
 
   if (!m_connectionOpen) {
@@ -42,8 +44,7 @@ SQLiteReports::SQLiteReports(std::filesystem::path databasePath) : m_databasePat
 }
 
 bool SQLiteReports::isValidConnection() const {
-  std::string version = this->energyPlusVersion();
-  return !version.empty();
+  return !this->energyPlusVersion().empty();
 }
 
 SQLiteReports::~SQLiteReports() {
@@ -61,8 +62,7 @@ bool SQLiteReports::close() {
 std::string SQLiteReports::energyPlusVersion() const {
   std::string result;
   if (m_db) {
-    PreparedStatement stmt("SELECT EnergyPlusVersion FROM Simulations", m_db, false);
-    if (auto s_ = stmt.execAndReturnFirstString()) {
+    if (auto s_ = PreparedStatement{R"sql(SELECT EnergyPlusVersion FROM Simulations)sql", m_db, false}.execAndReturnFirstString()) {
       // in 8.1 this is 'EnergyPlus-Windows-32 8.1.0.008, YMD=2014.11.08 22:49'
       // in 8.2 this is 'EnergyPlus, Version 8.2.0-8397c2e30b, YMD=2015.01.09 08:37'
       // radiance script is writing 'EnergyPlus, VERSION 8.2, (OpenStudio) YMD=2015.1.9 08:35:36'
@@ -75,16 +75,16 @@ std::string SQLiteReports::energyPlusVersion() const {
 }
 
 std::optional<double> SQLiteReports::netSiteEnergy() const {
-  std::string s = R"sql(SELECT Value FROM TabularDataWithStrings
-                           WHERE ReportName='AnnualBuildingUtilityPerformanceSummary'
-                           AND ReportForString='Entire Facility'
-                           AND TableName='Site and Source Energy'
-                           AND RowName='Net Site Energy'
-                           AND ColumnName='Total Energy'
-                           AND Units='GJ';)sql";
-
-  PreparedStatement stmt(s, m_db, false);
-  return stmt.execAndReturnFirstDouble();
+  return PreparedStatement{
+    R"sql(SELECT Value FROM TabularDataWithStrings
+            WHERE ReportName='AnnualBuildingUtilityPerformanceSummary'
+            AND ReportForString='Entire Facility'
+            AND TableName='Site and Source Energy'
+            AND RowName='Net Site Energy'
+            AND ColumnName='Total Energy'
+            AND Units='GJ';)sql",
+    m_db, false}
+    .execAndReturnFirstDouble();
 }
 
 std::vector<UnmetHoursTableRow> SQLiteReports::unmetHoursTable() const {
@@ -119,7 +119,7 @@ SELECT Value FROM TabularDataWithStrings
       stmt.bind(1, zoneName);
       stmt.bind(2, std::string{colName});
       if (auto val_ = stmt.execAndReturnFirstDouble()) {
-        vals[i] = val_.value();
+        vals[i++] = val_.value();
       }
     }
     result.emplace_back(zoneName, vals);
@@ -132,7 +132,7 @@ EndUseTable SQLiteReports::endUseByFuelTable() const {
 
   EndUseTable result;
 
-  double threshold = 0.1;
+  const double threshold = 0.1;
 
   auto endUsesNames_ =  //
     PreparedStatement{R"sql(SELECT DISTINCT(RowName) FROM TabularDataWithStrings
@@ -250,7 +250,7 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
 
   const std::array<TableEntry, 2> entries{{
     {"EnergyPlus Version", report.energyPlusVersion(), ""},
-    {"Net Site Energy", fmt::format("{:.2f}", report.netSiteEnergy().value()), "GJ"},
+    {"Net Site Energy", fmt::format("{:.2f}", report.netSiteEnergy().value()), "GJ"},  // NOLINT(bugprone-unchecked-optional-access)
   }};
 
   Elements elementList;
@@ -274,7 +274,7 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
 
   for (const TableEntry& entry : entries) {
 
-    Element document =  //
+    elementList.emplace_back(  //
       hbox({
         hcenter(text(entry.item)) | ftxui::size(WIDTH, EQUAL, size_item),
         separator(),
@@ -282,8 +282,7 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
         separator(),
         hcenter(text(entry.units)) | ftxui::size(WIDTH, EQUAL, size_units),
       })
-      | flex;
-    elementList.push_back(document);
+      | flex);
     elementList.push_back(separator());
   }
 
@@ -327,7 +326,7 @@ ftxui::Element RenderUnmetHours(const sql::SQLiteReports& report) {
     if (tableRow.zoneName.empty()) {
       continue;
     }
-    Element document =  //
+    rowList.emplace_back(  //
       hbox({
         hcenter(text(tableRow.zoneName)) | flex,  //| ftxui::size(WIDTH, EQUAL, size_item),
         separator(),
@@ -339,8 +338,7 @@ ftxui::Element RenderUnmetHours(const sql::SQLiteReports& report) {
         separator(),
         hcenter(text(format_double(tableRow.duringOccCooling))) | ftxui::size(WIDTH, EQUAL, col_sizes[4]),
       })
-      | flex;
-    rowList.push_back(document);
+      | flex);
     rowList.push_back(separator());
     if (i == tableData.size() - 2) {
       rowList.push_back(separator());
@@ -411,7 +409,7 @@ ftxui::Element RenderEndUseByFuel(const sql::SQLiteReports& report) {
 }
 
 ftxui::Element SQLiteComponent::RenderDatabase(std::filesystem::path databasePath) {
-  sql::SQLiteReports report(std::move(databasePath));
+  const sql::SQLiteReports report(std::move(databasePath));
 
   // TODO maybe at some point figure out how to make this work
   // auto layout = Container::Vertical({

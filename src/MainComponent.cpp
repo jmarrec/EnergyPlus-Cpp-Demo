@@ -44,13 +44,13 @@ MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<E
       fs::path outputPath = m_outputDirectory / "eplustbl.htm";
       if (fs::is_regular_file(outputPath)) {
 #if __linux__
-        std::string cmd = fmt::format("xdg-open {} &", outputPath);
+        const std::string cmd = fmt::format("xdg-open {} &", outputPath);
 #elif __APPLE__
-        std::string cmd = fmt::format("open {} &", outputPath);
+        const std::string cmd = fmt::format("open {} &", outputPath);
 #elif _WIN32
-        std::string cmd = fmt::format("start {} &", outputPath);
+        const std::string cmd = fmt::format("start {} &", outputPath);
 #endif
-        [[maybe_unused]] auto result = std::system(cmd.c_str());
+        [[maybe_unused]] auto result = std::system(cmd.c_str());  // NOLINT(cert-env33-c, concurrency-mt-unsafe)
       }
     },
     ButtonOption::Simple());
@@ -147,7 +147,7 @@ void MainComponent::reload_results() {
     // parse the file
     if (auto [whole, warningOrErrorType, msg] = warningOrErrorMatcher(line); whole) {
 
-      std::string_view warningOrErrorTypeTrim = utilities::ascii_trim(warningOrErrorType);
+      const std::string_view warningOrErrorTypeTrim = utilities::ascii_trim(warningOrErrorType);
       message = msg;
 
       if (warningOrErrorTypeTrim == "Fatal") {
@@ -217,7 +217,7 @@ void MainComponent::RegisterLogLevel(EnergyPlus::Error log_level) {
 Element MainComponent::Render() {
   static int i = 0;
 
-  int current_line = (std::min(tab_selected_, 1) == 0 ? m_stdout_displayer : m_error_displayer)->selected();
+  const int current_line = (std::min(tab_selected_, 1) == 0 ? m_stdout_displayer : m_error_displayer)->selected();
 
   if (tab_selected_ == 0) {
 
