@@ -1,11 +1,12 @@
 #include "EnergyPlus.hpp"
+
 #include "ErrorMessage.hpp"            // for ErrorMessage
 #include "utilities/ASCIIStrings.hpp"  // for ascii_to_lower_copy
 
 #include <EnergyPlus/api/TypeDefs.h>  // for Error
 #include <EnergyPlus/api/func.h>      // for registerErrorCallback
-#include <EnergyPlus/api/runtime.h>   // for energyplus, registerStdOutCallback, registerProgressCallback
-#include <EnergyPlus/api/state.h>     // for stateDelete, stateNew
+#include <EnergyPlus/api/runtime.h>   // for energyplus, registerStdOut/ProgressCallback, setConsoleOutputState, setEnergyPlusRootDirectory
+#include <EnergyPlus/api/state.h>     // for stateDelete, stateNew, EnergyPlusState
 
 #include <ftxui/component/event.hpp>               // for Event, Event::Custom
 #include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive

@@ -1,23 +1,21 @@
 #include "SQLiteReports.hpp"
 
-#include "PreparedStatement.hpp"  // for PreparedStatement
-
-#include <ftxui/dom/elements.hpp>  // for Element
-
-#include <sqlite3.h>  // for sqlite3_close, sqlite3_open_v2
-
-#include <ctre.hpp>
-
-#include <fmt/core.h>  // for format
-
-#include <cstddef>     // for size_t
-#include <algorithm>   // for max
-#include <array>       // for array
-#include <filesystem>  // for path, copy_file
-#include <optional>    // for optional
-#include <stdexcept>   // for runtime_error
-#include <string>      // for string
-#include <utility>     // for move
+#include "PreparedStatement.hpp"   // for PreparedStatement
+                                   //
+#include <ftxui/dom/elements.hpp>  // for operator|, Element, separator, text, size, hcenter, vbox, Constraint, Direction, Elements, flex
+                                   //
+#include <sqlite3.h>               // for sqlite3_close, sqlite3_open_v2, SQLITE_OPEN_READONLY
+#include <ctre.hpp>                // For CTRE
+#include <fmt/core.h>              // for format
+                                   //
+#include <cstddef>                 // for size_t
+#include <algorithm>               // for max
+#include <array>                   // for array
+#include <filesystem>              // for path, copy_file, operator/, temp_directory_path, copy_options
+#include <optional>                // for optional
+#include <stdexcept>               // for runtime_error
+#include <string>                  // for string
+#include <utility>                 // for move
 
 using namespace ftxui;
 

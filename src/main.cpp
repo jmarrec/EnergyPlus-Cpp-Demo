@@ -1,30 +1,29 @@
-#include "MainComponent.hpp"
-#include "ErrorMessage.hpp"
-#include "EnergyPlus.hpp"
-
-#include "ftxui/component/component.hpp"           // for Button
+#include "EnergyPlus.hpp"                          // for validateFileType, runEnergyPlus
+#include "ErrorMessage.hpp"                        // for ErrorMessage
+#include "MainComponent.hpp"                       // for MainComponent
+                                                   //
+#include "ftxui/component/component.hpp"           // for Button, Renderer, Vertical, operator|=
 #include <ftxui/component/component_base.hpp>      // for ComponentBase
 #include <ftxui/component/component_options.hpp>   // for ButtonOption
 #include <ftxui/component/receiver.hpp>            // for MakeReceiver, Sender
 #include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive
-#include <ftxui/dom/elements.hpp>                  // for Element, text, operator|
-
-// TODO: temp, FTXUI 3.0.0 doesn't include this component yet, it's only on master.
-#include "ftxui/modal.hpp"
-
-#include <atomic>      // for atomic
-#include <chrono>      // for operator""s, chrono_literals
-#include <cstdlib>     // for exit
-#include <filesystem>  // for path, absolute
-#include <functional>  // for function
-#include <memory>      // for allocator, shared_ptr
-#include <string>      // for string, basic_string
-#include <thread>      // for thread
-#include <utility>     // for move
-
-#include <fmt/format.h>  // for formatting
-#include <fmt/chrono.h>  // for formatting std::chrono::time_point<std::chrono::system_clock>
-#include <fmt/std.h>     // for formatting std::filesystem::path
+#include <ftxui/dom/elements.hpp>                  // for Element, text, operator|, separator, size, vbox, border, Constraint, Direction
+                                                   //
+#include "ftxui/modal.hpp"                         // For Modal // TODO: temp, FTXUI 3.0.0 doesn't include this component yet, it's only on master.
+                                                   //
+#include <atomic>                                  // for atomic
+#include <chrono>                                  // for system_clock, duration, time_point
+#include <cstdlib>                                 // for exit
+#include <filesystem>                              // for path, absolute, is_regular_file, last_write_time, file_time_type, operator/
+#include <functional>                              // for function
+#include <memory>                                  // for allocator, shared_ptr
+#include <string>                                  // for string, basic_string
+#include <thread>                                  // for thread
+#include <utility>                                 // for move
+                                                   //
+#include <fmt/format.h>                            // for formatting
+#include <fmt/chrono.h>                            // for formatting std::chrono::time_point<std::chrono::system_clock>
+#include <fmt/std.h>                               // for formatting std::filesystem::path
 
 #ifdef _WIN32
 #  define __PRETTY_FUNCTION__ __FUNCSIG__

@@ -5,9 +5,10 @@
                                           //
 #include <EnergyPlus/api/TypeDefs.h>      // for Error
                                           //
-#include <ftxui/component/component.hpp>  // for Horizontal, Vertical, Tab
+#include <ftxui/component/component.hpp>  // for Horizontal, Vertical, Tab, Button, Checkbox
 #include <ftxui/component/event.hpp>      // for Event
-#include <ftxui/dom/elements.hpp>         // for text, separator, operator|
+#include <ftxui/dom/elements.hpp>         // for text, separator, operator|, color, filler, Element, hcenter, gauge, hbox, spinner, vbox, notflex
+#include <ftxui/screen/color.hpp>         // for Color
                                           //
 #include <ctre.hpp>                       // for CTRE
                                           //
@@ -17,10 +18,10 @@
 #include <algorithm>                      // for max, min
 #include <chrono>                         // for filesystem
 #include <cstdlib>                        // for system
-#include <filesystem>                     // for operator/, path, is_regular...
+#include <filesystem>                     // path, operator/, is_regular_file, weakly_canonical
 #include <fstream>                        // for ifstream
 #include <set>                            // for set
-#include <string>                         // for string, allocator, char_traits
+#include <string>                         // for string, to_string, char_traits, getline
 #include <string_view>                    // for operator==, basic_string_view
 #include <utility>                        // for move
 
