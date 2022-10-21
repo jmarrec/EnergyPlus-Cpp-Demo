@@ -37,7 +37,7 @@ std::chrono::time_point<std::chrono::system_clock> to_system_clock(TP tp) {
 }
 
 // Definition of the modal component. The details are not important.
-ftxui::Component ReloadModalComponent(std::function<void()> reload_results, std::function<void()> hide_modal, fs::path outputDirectory) {
+ftxui::Component ReloadModalComponent(std::function<void()> reload_results, std::function<void()> hide_modal, const fs::path& outputDirectory) {
   auto component = Container::Vertical({
     ftxui::Button("Reload Results", std::move(reload_results), ftxui::ButtonOption::Animated()),
     ftxui::Button("Start Fresh", std::move(hide_modal), ftxui::ButtonOption::Animated()),
@@ -132,7 +132,7 @@ int main(int argc, const char* argv[]) {
     main_component->reload_results();
   };
 
-  auto modal_component = ReloadModalComponent(reload_results, hide_modal, std::move(outputDirectory));
+  auto modal_component = ReloadModalComponent(reload_results, hide_modal, outputDirectory);
 
   // Use the `Modal` function to use together the main component and its modal window.
   // The |modal_reload_shown| boolean controls whether the modal is shown or not.
