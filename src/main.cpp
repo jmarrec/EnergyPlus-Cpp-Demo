@@ -17,9 +17,9 @@
 #include <filesystem>                              // for path, absolute, is_regular_file, last_write_time, file_time_type, operator/
 #include <functional>                              // for function
 #include <memory>                                  // for allocator, shared_ptr
-#include <span>                                    // for span
 #include <string>                                  // for string, basic_string
 #include <thread>                                  // for thread
+#include <vector>                                  // for vector
                                                    //
 #include <fmt/format.h>                            // for formatting
 #include <fmt/chrono.h>                            // for formatting std::chrono::time_point<std::chrono::system_clock> // IWYU pragma: keep
@@ -63,8 +63,8 @@ int main(int argc, const char* argv[]) {
 
   fs::path filePath;
 
-  // Avoid pointer arithmetics by using a span
-  std::span args(argv, argc);
+  // Avoid pointer arithmetics by using a vector (we convert to string anyways in the loop below, so it's better than using an extra span)
+  std::vector<std::string> args(argv, argv + argc);
 
   if (argc > 1) {
     filePath = fs::path(args[argc - 1]);
@@ -78,7 +78,7 @@ int main(int argc, const char* argv[]) {
   }
   fs::path outputDirectory(".");
   for (int i = 1; i < argc - 1; ++i) {
-    std::string arg(args[i]);
+    const auto& arg = args[i];
     if (arg == "-d" || arg == "--output-directory") {
       outputDirectory = fs::path(args[i + 1]);
       break;
