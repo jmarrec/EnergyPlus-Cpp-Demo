@@ -27,7 +27,7 @@ struct UnmetHoursTableRow
   double duringOccHeating;
   double duringOccCooling;
 
-  friend auto operator<=>(const UnmetHoursTableRow&, const UnmetHoursTableRow&) = default;
+  auto operator<=>(const UnmetHoursTableRow&) const = default;
 };
 
 // template <size_t ROW_SIZE, size_t COL_SIZE>
