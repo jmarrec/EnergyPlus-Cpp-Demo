@@ -13,7 +13,7 @@
 #include <ctre.hpp>                       // for CTRE
                                           //
 #include <fmt/format.h>                   // for formatting
-#include <fmt/std.h>                      // for formatting std::filesystem::path
+#include <fmt/std.h>                      // for formatting std::filesystem::path // IWYU pragma: keep
                                           //
 #include <algorithm>                      // for max, min
 #include <chrono>                         // for filesystem

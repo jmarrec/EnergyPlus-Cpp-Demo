@@ -151,6 +151,7 @@ if (INCLUDE_WHAT_YOU_USE)
   set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path}
     -Xiwyu --mapping_file=${CMAKE_CURRENT_SOURCE_DIR}/iwyu.imp
     -Xiwyu --max_line_length=150
+    -Xiwyu --no_fwd_decls # Annoys me when proposing to forward declare EnergyPlus::Error and ftxui::Event
   )
   message("CMAKE_CXX_INCLUDE_WHAT_YOU_USE=${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
 endif()

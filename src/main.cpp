@@ -13,6 +13,7 @@
                                                    //
 #include <atomic>                                  // for atomic
 #include <chrono>                                  // for system_clock, duration, time_point
+#include <compare>                                 // for operator<=, strong_ordering
 #include <cstdlib>                                 // for exit
 #include <filesystem>                              // for path, absolute, is_regular_file, last_write_time, file_time_type, operator/
 #include <functional>                              // for function
@@ -21,8 +22,8 @@
 #include <thread>                                  // for thread
                                                    //
 #include <fmt/format.h>                            // for formatting
-#include <fmt/chrono.h>                            // for formatting std::chrono::time_point<std::chrono::system_clock>
-#include <fmt/std.h>                               // for formatting std::filesystem::path
+#include <fmt/chrono.h>                            // for formatting std::chrono::time_point<std::chrono::system_clock> // IWYU pragma: keep
+#include <fmt/std.h>                               // for formatting std::filesystem::path // IWYU pragma: keep
 
 #ifdef _WIN32
 #  define __PRETTY_FUNCTION__ __FUNCSIG__

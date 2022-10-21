@@ -1,5 +1,7 @@
 #include "AboutComponent.hpp"
 
+#include <string>
+
 Element AboutComponent::Render() {
   auto document = vbox({
     hbox({
