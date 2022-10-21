@@ -69,6 +69,7 @@ Checks: |
 WarningsAsErrors: '*'
 HeaderFilterRegex: '*'
 FormatStyle:     file
+UseColor: true
 CheckOptions:
   - key:             modernize-use-override.AllowOverrideAndFinal
     value:           'true'

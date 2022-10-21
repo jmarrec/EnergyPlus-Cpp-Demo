@@ -58,7 +58,7 @@ bool PreparedStatement::bind(int position, double val) {
 }
 
 int PreparedStatement::execute() {
-  int code = sqlite3_step(m_statement);
+  const int code = sqlite3_step(m_statement);
   sqlite3_reset(m_statement);
   return code;
 }
@@ -66,7 +66,7 @@ int PreparedStatement::execute() {
 std::optional<double> PreparedStatement::execAndReturnFirstDouble() const {
   std::optional<double> value;
   if (m_db) {
-    int code = sqlite3_step(m_statement);
+    const int code = sqlite3_step(m_statement);
     if (code == SQLITE_ROW) {
       value = sqlite3_column_double(m_statement, 0);
     }
@@ -78,7 +78,7 @@ std::optional<double> PreparedStatement::execAndReturnFirstDouble() const {
 std::optional<int> PreparedStatement::execAndReturnFirstInt() const {
   std::optional<int> value;
   if (m_db) {
-    int code = sqlite3_step(m_statement);
+    const int code = sqlite3_step(m_statement);
     if (code == SQLITE_ROW) {
       value = sqlite3_column_int(m_statement, 0);
     }
@@ -90,7 +90,7 @@ std::optional<int> PreparedStatement::execAndReturnFirstInt() const {
 std::optional<std::string> PreparedStatement::execAndReturnFirstString() const {
   std::optional<std::string> value;
   if (m_db) {
-    int code = sqlite3_step(m_statement);
+    const int code = sqlite3_step(m_statement);
     if (code == SQLITE_ROW) {
       value = columnText(sqlite3_column_text(m_statement, 0));
     }
@@ -189,12 +189,12 @@ PreparedStatement::PreparedStatement(PreparedStatement::InternalConstructor /*un
     sqlite3_exec(m_db, "BEGIN", nullptr, nullptr, nullptr);
   }
 
-  int code = sqlite3_prepare_v2(m_db, t_stmt.c_str(), t_stmt.size(), &m_statement, nullptr);
+  const int code = sqlite3_prepare_v2(m_db, t_stmt.c_str(), t_stmt.size(), &m_statement, nullptr);
 
   if (!m_statement) {
-    int extendedErrorCode = sqlite3_extended_errcode(m_db);
+    const int extendedErrorCode = sqlite3_extended_errcode(m_db);
     const char* err = sqlite3_errmsg(m_db);
-    std::string errMsg = err;
+    const std::string errMsg = err;
     throw std::runtime_error("Error creating prepared statement: " + t_stmt + " with error code " + std::to_string(code) + ", extended code "
                              + std::to_string(extendedErrorCode) + ", errmsg: " + errMsg);
   }

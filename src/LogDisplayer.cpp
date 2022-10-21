@@ -31,9 +31,9 @@ std::map<EnergyPlus::Error, LogStyle> log_style = {
 Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
   m_size = lines.size();
 
-  Elements list;
-  int size_level = 15;
-  int size_message = 10;
+  Elements elementList;
+  const int size_level = 15;
+  [[maybe_unused]] int size_message = 10;
 
   for (auto& it : lines) {
     size_message = std::max(size_message, (int)it->message.size());
@@ -49,14 +49,14 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
 
   int index = 0;
   for (auto& it : lines) {
-    bool is_focus = (index++ == m_selected);
+    const bool is_focus = (index++ == m_selected);
     if (it->error != EnergyPlus::Error::Continue && previous_type != static_cast<int>(it->error)) {
-      list.push_back(separator());
+      elementList.push_back(separator());
     }
     previous_type = static_cast<int>(it->error);
 
     Decorator line_decorator = log_style[it->error].line_decorator;
-    Decorator level_decorator = log_style[it->error].level_decorator;
+    const Decorator level_decorator = log_style[it->error].level_decorator;
 
     if (is_focus) {
       line_decorator = line_decorator | focus;
@@ -65,7 +65,7 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
       }
     }
 
-    Element document =  //
+    elementList.emplace_back(  //
       hbox({
         text(/*it->error == EnergyPlus::Error::Continue ? "" : */ ErrorMessage::formatError(it->error))  //
           | ftxui::size(WIDTH, EQUAL, size_level)                                                        //
@@ -75,26 +75,25 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
         text(it->message)  //
           | flex,
       })
-      | flex | line_decorator;
-    list.push_back(document);
+      | flex | line_decorator);
   }
 
-  if (list.empty()) {
-    list.push_back(text("(empty)"));
+  if (elementList.empty()) {
+    elementList.push_back(text("(empty)"));
   }
 
   return window(text("Log"), vbox({
                                header,
                                separator(),
-                               vbox(list) | vscroll_indicator | yframe | reflect(box_),
+                               vbox(elementList) | vscroll_indicator | yframe | reflect(box_),
                              }));
 }
 
 Element LogDisplayer::RenderLines(const std::vector<std::string>& lines) {
   m_size = lines.size();
 
-  Elements list;
-  int size_message = 10;
+  Elements elementList;
+  [[maybe_unused]] int size_message = 10;
 
   for (const auto& l : lines) {
     size_message = std::max(size_message, static_cast<int>(l.size()));
@@ -107,7 +106,7 @@ Element LogDisplayer::RenderLines(const std::vector<std::string>& lines) {
 
   int index = 0;
   for (const auto& line : lines) {
-    bool is_focus = (index++ == m_selected);
+    const bool is_focus = (index++ == m_selected);
 
     Decorator line_decorator = nothing;
 
@@ -118,18 +117,17 @@ Element LogDisplayer::RenderLines(const std::vector<std::string>& lines) {
       }
     }
 
-    Element document = text(line) | flex | line_decorator;
-    list.push_back(document);
+    elementList.emplace_back(text(line) | flex | line_decorator);
   }
 
-  if (list.empty()) {
-    list.push_back(text("(empty)"));
+  if (elementList.empty()) {
+    elementList.push_back(text("(empty)"));
   }
 
   return window(text("Log"), vbox({
                                header,
                                separator(),
-                               vbox(list) | vscroll_indicator | yframe | reflect(box_),
+                               vbox(elementList) | vscroll_indicator | yframe | reflect(box_),
                              }));
 }
 
@@ -153,7 +151,7 @@ bool LogDisplayer::OnEvent(Event event) {
     TakeFocus();
   }
 
-  int old_selected = m_selected;
+  const int old_selected = m_selected;
   if (event == Event::ArrowUp || event == Event::Character('k') || (event.is_mouse() && event.mouse().button == Mouse::WheelUp)) {
     --m_selected;
   }

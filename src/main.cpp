@@ -101,7 +101,7 @@ int main(int argc, const char* argv[]) {
 
   std::shared_ptr<MainComponent> main_component;
 
-  std::string run_text = "Run " + filePath.string();
+  std::string run_text = "Run " + filePath.string();  // NOLINT(misc-const-correctness)
   std::thread runThread;
   auto run_button = ftxui::Button(
     &run_text,
@@ -110,7 +110,7 @@ int main(int argc, const char* argv[]) {
         runThread.join();
       }
       if (main_component != nullptr && main_component->hasAlreadyRun()) {
-        fs::file_time_type newWriteTime = fs::last_write_time(filePath);
+        const fs::file_time_type newWriteTime = fs::last_write_time(filePath);
         if (newWriteTime <= lastWriteTime) {
           senderRunOutput->Send("--------------------------------------------------------------------------");
           senderRunOutput->Send(fmt::format("Refusing to rerun file at {}, it was not modified since last run, Last modified time: {}", filePath,
@@ -119,11 +119,12 @@ int main(int argc, const char* argv[]) {
         }
         main_component->clear_state();
       }
+      // NOLINTNEXTLINE(modernize-avoid-c-arrays)
       runThread = std::thread(epcli::runEnergyPlus, argc, argv, &senderRunOutput, &senderErrorOutput, &progress, &screen);
     },
     ftxui::ButtonOption::Simple());
 
-  std::string quit_text = "Quit";
+  const std::string quit_text = "Quit";
   auto quit_button = ftxui::Button(&quit_text, screen.ExitLoopClosure(), ftxui::ButtonOption::Ascii());
 
   main_component = std::make_shared<MainComponent>(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button),
