@@ -148,8 +148,9 @@ option(INCLUDE_WHAT_YOU_USE OFF)
 # Enable globally:
 if (INCLUDE_WHAT_YOU_USE)
   find_program(iwyu_path NAMES include-what-you-use iwyu REQUIRED)
-  set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path} -Xiwyu
-      --mapping_file=${CMAKE_CURRENT_SOURCE_DIR}/iwyu.imp
+  set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${iwyu_path}
+    -Xiwyu --mapping_file=${CMAKE_CURRENT_SOURCE_DIR}/iwyu.imp
+    -Xiwyu --max_line_length=150
   )
   message("CMAKE_CXX_INCLUDE_WHAT_YOU_USE=${CMAKE_CXX_INCLUDE_WHAT_YOU_USE}")
 endif()
