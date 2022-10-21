@@ -125,7 +125,7 @@ int main(int argc, const char* argv[]) {
   auto quit_button = ftxui::Button(&quit_text, screen.ExitLoopClosure(), ftxui::ButtonOption::Ascii());
 
   main_component = std::make_shared<MainComponent>(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button),
-                                                   std::move(quit_button), &progress, std::move(outputDirectory));
+                                                   std::move(quit_button), &progress, outputDirectory);
 
   auto hide_modal = [&modal_reload_shown] { modal_reload_shown = false; };
   auto reload_results = [&main_component, &modal_reload_shown]() {
@@ -133,7 +133,7 @@ int main(int argc, const char* argv[]) {
     main_component->reload_results();
   };
 
-  auto modal_component = ReloadModalComponent(reload_results, hide_modal, outputDirectory);
+  auto modal_component = ReloadModalComponent(reload_results, hide_modal, std::move(outputDirectory));
 
   // Use the `Modal` function to use together the main component and its modal window.
   // The |modal_reload_shown| boolean controls whether the modal is shown or not.
