@@ -496,3 +496,327 @@ TEST(MainComponent, MainComponent) {
   EXPECT_FALSE(screenStr.find("the 2nd Warning continues") != std::string::npos);
   EXPECT_TRUE(screenStr.find("EnergyPlus Completed Successfully") != std::string::npos);
 }
+
+TEST(MainComponent, MainComponent_reload_results) {
+
+  bool quit = false;
+  bool run = false;
+
+  std::atomic<int> progress = 0;
+
+  const std::string quit_text = "Quit";
+  auto quit_button = ftxui::Button(
+    &quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
+
+  const std::string run_text = "Run";
+  auto run_button = ftxui::Button(
+    &run_text,
+    [&run, &progress] {
+      run = true;
+      progress = 100;
+    },
+    ftxui::ButtonOption::Simple());
+
+  auto receiverRunOutput = ftxui::MakeReceiver<std::string>();
+  auto receiverErrorOutput = ftxui::MakeReceiver<ErrorMessage>();
+  auto senderRunOutput = receiverRunOutput->MakeSender();
+  auto senderErrorOutput = receiverErrorOutput->MakeSender();
+
+  const fs::path outputDirectory(TEST_DIR);
+
+  MainComponent main_component(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button), std::move(quit_button), &progress,
+                               outputDirectory);
+  main_component.reload_results();
+
+  ftxui::Screen screen(80, 20);
+
+  Render(screen, main_component.Render());
+  std::string screenStr = screen.ToString();
+
+  // EnergyPlus-Cpp-Demo    │Stdout│eplusout.err│SQL Reports│About│1/5│      │↘ Quit
+  // ───────────────────────┴──────┴────────────┴───────────┴─────┴───┴──────┴───────
+  //                  ┌──────────────────┐                 ┌─────────┐┌─────────────┐
+  //                  │Run               │                 │Open HTML││Clear Results│
+  //                  └──────────────────┘                 └─────────┘└─────────────┘
+  // ──────┬────────────────────┬───────────────────────────────┬──────────┬─────────
+  // Status│        Done        │██████████████████████████100 %│3 warnings│0 severes
+  // ──────┴────────────────────┴───────────────────────────────┴──────────┴─────────
+  // ╭Log───────────────────────────────────────────────────────────────────────────╮
+  // │Message                                                                       │
+  // ├──────────────────────────────────────────────────────────────────────────────┤
+  // │=========================================                                     │
+  // │   Results have been reloaded from disk                                       │
+  // │=========================================                                     │
+  // │                                                                              │
+  // │   ************* EnergyPlus Completed Successfully-- 3 Warning; 0 Severe Error│
+  // ╰──────────────────────────────────────────────────────────────────────────────╯
+
+  // EXPECT_EQ("", screenStr) << screenStr;
+
+  EXPECT_TRUE(screenStr.find("Done") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("100 %") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("3 warnings") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("0 severes") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Results have been reloaded from disk") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("EnergyPlus Completed Successfully-- 3 Warning; 0 Severe Error") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Open HTML") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Clear Results") != std::string::npos);
+
+  // Simulate Switching Tab to eplusout.err
+  main_component.OnEvent(Event::Home);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowRight);
+
+  // This isn't an interactive screen, so recreate it
+  screen = ftxui::Screen(80, 20);
+  Render(screen, main_component.Render());
+  screenStr = screen.ToString();
+
+  // EnergyPlus-Cpp-Demo │Stdout│eplusout.err│SQL Reports│About│0/21  [21]│  │↓ Quit
+  // ────────────────────┴──────┴────────────┴───────────┴─────┴──────────┴──┴───────
+  // ╭Type─────╮
+  // │▣ Info   │
+  // │▣ Warning│
+  // ╰─────────╯
+  // ╭Log────────────┬──────────────────────────────────────────────────────────────╮
+  // │Type           │Message                                                       │
+  // ├───────────────┼──────────────────────────────────────────────────────────────┤
+  // │Info           │Program Version,EnergyPlus, Version 22.2.0-23dcfc8220, YMD=20┃│
+  // ├───────────────┼─────────────────────────────────────────────────────────────┃│
+  // │Warning        │Weather file location will be used rather than entered (IDF) ┃│
+  // │Continue       │..Location object=DENVER CENTENNIAL  GOLDEN   N_CO_USA DESIGN┃│
+  // │Continue       │..Weather File Location=Chicago Ohare Intl Ap IL USA TMY3 WMO╹│
+  // │Continue       │..due to location differences, Latitude difference=[2.24] deg │
+  // │Continue       │..Time Zone difference=[1.0] hour(s), Elevation difference=[8 │
+  // ├───────────────┼───────────────────────────────────────────────────────────── │
+  // │Warning        │SetUpDesignDay: Entered DesignDay Barometric Pressure=81198 d │
+  // │Continue       │...occurs in DesignDay=DENVER CENTENNIAL  GOLDEN   N ANN HTG  │
+  // ╰───────────────┴──────────────────────────────────────────────────────────────╯
+
+  // EXPECT_EQ("", screenStr) << screenStr;
+
+  EXPECT_TRUE(screenStr.find("Type") != std::string::npos);
+  EXPECT_FALSE(screenStr.find("Severe") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Warning") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Info") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Log") != std::string::npos);
+
+  EXPECT_TRUE(screenStr.find("Weather file location will be used rather than entered") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("..Location object=DENVER CENTENNIAL") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Program Version,EnergyPlus") != std::string::npos);
+  EXPECT_FALSE(screenStr.find("Simulation Error Summary") != std::string::npos);
+
+  main_component.OnEvent(Event::ArrowDown);
+  main_component.OnEvent(Event::ArrowDown);
+  main_component.OnEvent(Event::Return);
+  screen = ftxui::Screen(80, 20);
+  Render(screen, main_component.Render());
+  screenStr = screen.ToString();
+
+  // EnergyPlus-Cpp-Demo │Stdout│eplusout.err│SQL Reports│About│0/12  [21]│  │↙ Quit
+  // ────────────────────┴──────┴────────────┴───────────┴─────┴──────────┴──┴───────
+  // ╭Type─────╮
+  // │▣ Info   │
+  // │☐ Warning│
+  // ╰─────────╯
+  // ╭Log────────────┬──────────────────────────────────────────────────────────────╮
+  // │Type           │Message                                                       │
+  // ├───────────────┼──────────────────────────────────────────────────────────────┤
+  // │Info           │Program Version,EnergyPlus, Version 22.2.0-23dcfc8220, YMD=20┃│
+  // │Info           │************* Testing Individual Branch Integrity            ┃│
+  // │Info           │************* All Branches passed integrity testing          ┃│
+  // │Info           │************* Testing Individual Supply Air Path Integrity   ┃│
+  // │Info           │************* All Supply Air Paths passed integrity testing  ┃│
+  // │Info           │************* Testing Individual Return Air Path Integrity   ┃│
+  // │Info           │************* All Return Air Paths passed integrity testing  ┃│
+  // │Info           │************* No node connection errors were found.          ┃│
+  // │Info           │************* Beginning Simulation                           ╹│
+  // │Info           │************* Simulation Error Summary *************          │
+  // ╰───────────────┴──────────────────────────────────────────────────────────────╯
+
+  // EXPECT_EQ("", screenStr) << screenStr;
+
+  EXPECT_TRUE(screenStr.find("Type") != std::string::npos);
+  EXPECT_FALSE(screenStr.find("Severe") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Warning") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Info") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Log") != std::string::npos);
+
+  EXPECT_FALSE(screenStr.find("Weather file location will be used rather than entered") != std::string::npos);
+  EXPECT_FALSE(screenStr.find("..Location object=DENVER CENTENNIAL") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Program Version,EnergyPlus") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Simulation Error Summary") != std::string::npos);
+}
+
+TEST(MainComponent, MainComponent_SqlTab) {
+  bool quit = false;
+  bool run = false;
+
+  std::atomic<int> progress = 0;
+
+  const std::string quit_text = "Quit";
+  auto quit_button = ftxui::Button(
+    &quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
+
+  const std::string run_text = "Run";
+  auto run_button = ftxui::Button(
+    &run_text,
+    [&run, &progress] {
+      run = true;
+      progress = 100;
+    },
+    ftxui::ButtonOption::Simple());
+
+  auto receiverRunOutput = ftxui::MakeReceiver<std::string>();
+  auto receiverErrorOutput = ftxui::MakeReceiver<ErrorMessage>();
+  auto senderRunOutput = receiverRunOutput->MakeSender();
+  auto senderErrorOutput = receiverErrorOutput->MakeSender();
+
+  const fs::path outputDirectory(TEST_DIR);
+
+  MainComponent main_component(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button), std::move(quit_button), &progress,
+                               outputDirectory);
+  main_component.reload_results();
+
+  // Simulate Switching Tab to eplusout.err
+  main_component.OnEvent(Event::Home);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowRight);
+  main_component.OnEvent(Event::ArrowRight);
+
+  // This isn't an interactive screen, so recreate it
+  ftxui::Screen screen(90, 50);
+  Render(screen, main_component.Render());
+  std::string screenStr = screen.ToString();
+
+  // EnergyPlus-Cpp-Demo         │Stdout│eplusout.err│SQL Reports│About│1/5│           │← Quit
+  // ────────────────────────────┴──────┴────────────┴───────────┴─────┴───┴───────────┴───────
+  //
+  // ╭High Level Info───────────────┬──────────────────────────────┬─────────────────────────╮
+  // │             Item             │            Value             │     Units               │
+  // ├──────────────────────────────┼──────────────────────────────┼─────────────────────────┤
+  // │      EnergyPlus Version      │            22.2.0            │                         │
+  // ├──────────────────────────────┼──────────────────────────────┼─────────────────────────┤
+  // │       Net Site Energy        │            225.18            │      GJ                 │
+  // │                              │                              │                         │
+  // ╰──────────────────────────────┴──────────────────────────────┴─────────────────────────╯
+  // ╭Unmet Hours─────────────┬──────────────┬───────────────────────┬───────────────────────╮
+  // │Zone Name│During Heating│During Cooling│During Occupied Heating│During Occupied Cooling│
+  // ├─────────┼──────────────┼──────────────┼───────────────────────┼───────────────────────┤
+  // │SPACE1-1 │    172.00    │    52.50     │         3.25          │         52.50         │
+  // ├─────────┼──────────────┼──────────────┼───────────────────────┼───────────────────────┤
+  // │SPACE2-1 │    117.50    │    39.00     │         0.00          │         5.25          │
+  // ├─────────┼──────────────┼──────────────┼───────────────────────┼───────────────────────┤
+  // │SPACE3-1 │    162.00    │     0.00     │         3.25          │         0.00          │
+  // ├─────────┼──────────────┼──────────────┼───────────────────────┼───────────────────────┤
+  // │SPACE4-1 │    139.75    │    20.00     │         1.00          │         0.00          │
+  // ├─────────┼──────────────┼──────────────┼───────────────────────┼───────────────────────┤
+  // │SPACE5-1 │    205.50    │     0.50     │         0.50          │         0.50          │
+  // ├─────────┼──────────────┼──────────────┼───────────────────────┼───────────────────────┤
+  // │PLENUM-1 │     0.00     │     0.00     │         0.00          │         0.00          │
+  // ├─────────┴──────────────┴──────────────┴───────────────────────┴───────────────────────┤
+  // ├─────────┬──────────────┬──────────────┬───────────────────────┬───────────────────────┤
+  // │Facility │    209.75    │    111.50    │         3.25          │         57.75         │
+  // │         │              │              │                       │                       │
+  // ╰─────────┴──────────────┴──────────────┴───────────────────────┴───────────────────────╯
+  // ╭End Use by Fuel─────┬────────────────┬─────────────────────────────────────────────────╮
+  // │End Use             │Electricity [GJ]│Natural Gas [GJ]                                 │
+  // ├────────────────────┼────────────────┼─────────────────────────────────────────────────┤
+  // │Heating             │      0.00      │     68.55                                       │
+  // ├────────────────────┼────────────────┼─────────────────────────────────────────────────┤
+  // │Cooling             │     16.42      │      0.00                                       │
+  // ├────────────────────┼────────────────┼─────────────────────────────────────────────────┤
+  // │Interior Lighting   │     81.24      │      0.00                                       │
+  // ├────────────────────┼────────────────┼─────────────────────────────────────────────────┤
+  // │Interior Equipment  │     47.70      │      0.00                                       │
+  // ├────────────────────┼────────────────┼─────────────────────────────────────────────────┤
+  // │Fans                │      8.88      │      0.00                                       │
+  // ├────────────────────┼────────────────┼─────────────────────────────────────────────────┤
+  // │Pumps               │      2.39      │      0.00                                       │
+  // ├────────────────────┼────────────────┼─────────────────────────────────────────────────┤
+  // │Total End Uses      │     156.63     │     68.55                                       │
+  // ├────────────────────┴────────────────┴─────────────────────────────────────────────────┤
+  // ╰───────────────────────────────────────────────────────────────────────────────────────╯
+
+  // EXPECT_EQ("", screenStr) << screenStr;
+
+  EXPECT_TRUE(screenStr.find("EnergyPlus Version") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("22.2.0") != std::string::npos);
+
+  EXPECT_TRUE(screenStr.find("Net Site Energy") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("225.18") != std::string::npos);
+
+  EXPECT_TRUE(screenStr.find("205.50") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("57.75") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Electricity [GJ]") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("81.24") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Total End Uses") != std::string::npos);
+}
+
+TEST(MainComponent, MainComponent_About) {
+  bool quit = false;
+  bool run = false;
+
+  std::atomic<int> progress = 0;
+
+  const std::string quit_text = "Quit";
+  auto quit_button = ftxui::Button(
+    &quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
+
+  const std::string run_text = "Run";
+  auto run_button = ftxui::Button(
+    &run_text,
+    [&run, &progress] {
+      run = true;
+      progress = 100;
+    },
+    ftxui::ButtonOption::Simple());
+
+  auto receiverRunOutput = ftxui::MakeReceiver<std::string>();
+  auto receiverErrorOutput = ftxui::MakeReceiver<ErrorMessage>();
+  auto senderRunOutput = receiverRunOutput->MakeSender();
+  auto senderErrorOutput = receiverErrorOutput->MakeSender();
+
+  const fs::path outputDirectory(TEST_DIR);
+
+  MainComponent main_component(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button), std::move(quit_button), &progress,
+                               outputDirectory);
+  main_component.reload_results();
+
+  // Simulate Switching Tab to eplusout.err
+  main_component.OnEvent(Event::Home);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowRight);
+  main_component.OnEvent(Event::ArrowRight);
+  main_component.OnEvent(Event::ArrowRight);
+
+  // This isn't an interactive screen, so recreate it
+  ftxui::Screen screen(80, 10);
+  Render(screen, main_component.Render());
+  std::string screenStr = screen.ToString();
+  // EXPECT_EQ("", screenStr) << screenStr;
+
+  EXPECT_TRUE(screenStr.find("Skipping Lines faster") != std::string::npos);
+  EXPECT_FALSE(screenStr.find("[Quit]") != std::string::npos);
+
+  main_component.OnEvent(Event::ArrowRight);
+  // This isn't an interactive screen, so recreate it
+  screen = ftxui::Screen(80, 1);
+  Render(screen, main_component.Render());
+  screenStr = screen.ToString();
+  // EXPECT_EQ("", screenStr) << screenStr;
+
+  EXPECT_TRUE(screenStr.find("[Quit]") != std::string::npos);
+  EXPECT_FALSE(quit);
+  main_component.OnEvent(Event::Return);
+  EXPECT_TRUE(quit);
+}
