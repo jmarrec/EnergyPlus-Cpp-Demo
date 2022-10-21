@@ -2,8 +2,19 @@
 
 #include "../src/sqlite/SQLiteReports.hpp"  // for UnmetHoursTableRow, SQLiteReports, EndUseTable
 #include "../src/LogDisplayer.hpp"          // for LogDisplayer
+#include "../src/ErrorMessage.hpp"          // for ErrorMessage
+#include "../src/MainComponent.hpp"         // for MainComponent
 
-#include <ftxui/component/event.hpp>  // for Event
+#include <EnergyPlus/api/TypeDefs.h>  // for Error
+
+#include "ftxui/component/component.hpp"           // for Button, Renderer, Vertical, operator|=
+#include <ftxui/component/component_base.hpp>      // for ComponentBase
+#include <ftxui/component/component_options.hpp>   // for ButtonOption
+#include <ftxui/component/event.hpp>               // for Event
+#include <ftxui/component/receiver.hpp>            // for MakeReceiver, Sender
+#include <ftxui/screen/screen.hpp>                 // for Screen
+#include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive
+#include <ftxui/dom/elements.hpp>                  // for Element, text, operator|, separator, size, vbox, border, Constraint, Direction
 
 #include <array>       // for array
 #include <filesystem>  // for is_regular_file, operator/, path
@@ -92,7 +103,7 @@ TEST(SQLiteReports, EndUseTable) {
   EXPECT_EQ(vals, endUseTable.values);
 }
 
-TEST(LogDisplayer, Basic) {
+TEST(LogDisplayer, StdoutLines) {
 
   LogDisplayer log;
 
@@ -106,7 +117,9 @@ TEST(LogDisplayer, Basic) {
   }
 
   // Shouldn't crash
-  log.RenderLines(lines);
+  const ftxui::Element element = log.RenderLines(lines);
+  ftxui::Screen screen(25, 10);
+  Render(screen, element);
 
   EXPECT_EQ(0, log.selected());
   log.OnEvent(Event::ArrowDown);
@@ -130,4 +143,356 @@ TEST(LogDisplayer, Basic) {
   EXPECT_EQ(4, log.selected());
   log.OnEvent(Event::TabReverse);
   EXPECT_EQ(2, log.selected());
+
+  const std::string expectedScreen =  //
+    "╭Log────────────────────╮\r\n"
+    "│Message                │\r\n"
+    "├───────────────────────┤\r\n"
+    "│\x1B[7mLine 1                \x1B[27m┃│\r\n"  // \x1B are for the focus line
+    "│Line 2                ┃│\r\n"
+    "│Line 3                 │\r\n"
+    "│Line 4                 │\r\n"
+    "│Line 5                 │\r\n"
+    "│Line 6                 │\r\n"
+    "╰───────────────────────╯";
+
+  EXPECT_EQ(expectedScreen, screen.ToString()) << screen.ToString();
+}
+
+TEST(LogDisplayer, Eplusout) {
+
+  LogDisplayer log;
+
+  ASSERT_NO_THROW(log.Render());
+
+  constexpr size_t nLines = 20;
+  std::vector<ErrorMessage> errors;
+  errors.reserve(nLines);
+  EnergyPlus::Error error = EnergyPlus::Error::Continue;
+  for (size_t i = 0; i < nLines; ++i) {
+    if (i % 8 == 0) {
+      error = EnergyPlus::Error::Severe;
+    } else if (i % 4 == 0) {
+      error = EnergyPlus::Error::Warning;
+    } else {
+      error = EnergyPlus::Error::Continue;
+    }
+    errors.emplace_back(error, "Line " + std::to_string(i + 1));
+  }
+
+  std::vector<ErrorMessage*> filtered_errorMsgs;
+  filtered_errorMsgs.reserve(errors.size());
+  // No filter
+  for (auto& errorMsg : errors) {
+    filtered_errorMsgs.push_back(&errorMsg);
+  }
+
+  // Shouldn't crash
+  const ftxui::Element element = log.RenderLines(filtered_errorMsgs);
+
+  EXPECT_EQ(0, log.selected());
+  log.OnEvent(Event::ArrowDown);
+  EXPECT_EQ(1, log.selected());
+  log.OnEvent(Event::ArrowDown);
+  EXPECT_EQ(2, log.selected());
+  log.OnEvent(Event::ArrowUp);
+  EXPECT_EQ(1, log.selected());
+
+  log.OnEvent(Event::End);
+  EXPECT_EQ(19, log.selected());
+
+  log.OnEvent(Event::Home);
+  EXPECT_EQ(0, log.selected());
+
+  constexpr int sizeTab = nLines / 10;
+
+  log.OnEvent(Event::Tab);
+  EXPECT_EQ(2, log.selected());
+  log.OnEvent(Event::Tab);
+  EXPECT_EQ(4, log.selected());
+  log.OnEvent(Event::TabReverse);
+  EXPECT_EQ(2, log.selected());
+
+  {
+    ftxui::Screen screen(26, 17);
+    Render(screen, element);
+    // ╭Log────────────┬────────╮
+    // │Type           │Message │
+    // ├───────────────┼────────┤
+    // │Severe         │Line 1 ┃│
+    // │Continue       │Line 2 ┃│
+    // │Continue       │Line 3 ┃│
+    // │Continue       │Line 4 ┃│
+    // ├───────────────┼───────┃│
+    // │Warning        │Line 5 ┃│
+    // │Continue       │Line 6 ┃│
+    // │Continue       │Line 7 ╹│
+    // │Continue       │Line 8  │
+    // ├───────────────┼─────── │
+    // │Severe         │Line 9  │
+    // │Continue       │Line 10 │
+    // │Continue       │Line 11 │
+    // ╰───────────────┴────────╯
+
+    const std::string expectedScreen =  //
+      "╭Log────────────┬────────╮\r\n"
+      "│Type           │Message │\r\n"
+      "├───────────────┼────────┤\r\n"
+      "│\x1B[1m\x1B[7m\x1B[91m\x1B[49mSevere         \x1B[39m\x1B[49m│Line 1 \x1B[22m\x1B[27m┃│\r\n"
+      "│\x1B[2mContinue       │Line 2 \x1B[22m┃│\r\n"
+      "│\x1B[2mContinue       │Line 3 \x1B[22m┃│\r\n"
+      "│\x1B[2mContinue       │Line 4 \x1B[22m┃│\r\n"
+      "├───────────────┼───────┃│\r\n"
+      "│\x1B[33m\x1B[49mWarning        \x1B[39m\x1B[49m│Line 5 ┃│\r\n"
+      "│\x1B[2mContinue       │Line 6 \x1B[22m┃│\r\n"
+      "│\x1B[2mContinue       │Line 7 \x1B[22m╹│\r\n"
+      "│\x1B[2mContinue       │Line 8 \x1B[22m │\r\n"
+      "├───────────────┼─────── │\r\n"
+      "│\x1B[1m\x1B[91m\x1B[49mSevere         \x1B[39m\x1B[49m│Line 9 \x1B[22m │\r\n"
+      "│\x1B[2mContinue       │Line 10\x1B[22m │\r\n"
+      "│\x1B[2mContinue       │Line 11\x1B[22m │\r\n"
+      "╰───────────────┴────────╯";
+
+    EXPECT_EQ(expectedScreen, screen.ToString()) << screen.ToString();
+  }
+
+  {
+    // Test flex
+    const std::string expectedScreen =  //
+      "╭Log────────────┬──────────────────────────────────────────────────────────────╮\r\n"
+      "│Type           │Message                                                       │\r\n"
+      "╰───────────────┴──────────────────────────────────────────────────────────────╯";
+
+    ftxui::Screen screen(80, 3);
+    Render(screen, element);
+    EXPECT_EQ(expectedScreen, screen.ToString()) << screen.ToString();
+  }
+}
+
+TEST(MainComponent, MainComponent) {
+
+  bool quit = false;
+  bool run = false;
+
+  std::atomic<int> progress = 0;
+
+  const std::string quit_text = "Quit";
+  auto quit_button = ftxui::Button(
+    &quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
+
+  const std::string run_text = "Run";
+  auto run_button = ftxui::Button(
+    &run_text,
+    [&run, &progress] {
+      run = true;
+      progress = 100;
+    },
+    ftxui::ButtonOption::Simple());
+
+  auto receiverRunOutput = ftxui::MakeReceiver<std::string>();
+  auto receiverErrorOutput = ftxui::MakeReceiver<ErrorMessage>();
+  auto senderRunOutput = receiverRunOutput->MakeSender();
+  auto senderErrorOutput = receiverErrorOutput->MakeSender();
+
+  const fs::path outputDirectory(TEST_DIR);
+
+  MainComponent main_component(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button), std::move(quit_button), &progress,
+                               outputDirectory);
+  ftxui::Screen screen(80, 20);
+
+  Render(screen, main_component.Render());
+  std::string screenStr = screen.ToString();
+  // EnergyPlus-Cpp-Demo    │Stdout│eplusout.err│SQL Reports│About│1/0│      │← Quit
+  // ───────────────────────┴──────┴────────────┴───────────┴─────┴───┴──────┴───────
+  //                               ┌──────────────────┐
+  //                               │Run               │
+  //                               └──────────────────┘
+  // ──────┬────────────────────┬───────────────────────────────┬──────────┬─────────
+  // Status│      Pending       │                            0 %│0 warnings│0 severes
+  // ──────┴────────────────────┴───────────────────────────────┴──────────┴─────────
+  // ╭Log───────────────────────────────────────────────────────────────────────────╮
+  // │Message                                                                       │
+  // ├──────────────────────────────────────────────────────────────────────────────┤
+  // │(empty)                                                                       │
+  // ╰──────────────────────────────────────────────────────────────────────────────╯
+
+  // EXPECT_EQ("", screenStr) << screenStr;
+
+  EXPECT_TRUE(screenStr.find("Pending") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("0 %") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("0 warnings") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("0 severes") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("(empty)") != std::string::npos);
+
+  // Simulate Mid Simulation
+
+  progress = 75;
+  senderRunOutput->Send("Stdout Line 1");
+  senderRunOutput->Send("Stdout Line 2");
+  senderRunOutput->Send("Stdout Line 3");
+  senderErrorOutput->Send(ErrorMessage{EnergyPlus::Error::Severe, "A Severe Error"});
+  senderErrorOutput->Send(ErrorMessage{EnergyPlus::Error::Continue, "the Severe continues"});
+  senderErrorOutput->Send(ErrorMessage{EnergyPlus::Error::Warning, "A Warning"});
+  senderErrorOutput->Send(ErrorMessage{EnergyPlus::Error::Continue, "the Warning continues"});
+  senderErrorOutput->Send(ErrorMessage{EnergyPlus::Error::Warning, "A 2nd Warning"});
+  senderErrorOutput->Send(ErrorMessage{EnergyPlus::Error::Continue, "the 2nd Warning continues"});
+
+  main_component.OnEvent(Event::Custom);
+
+  // This isn't an interactive screen, to recreate it
+  screen = ftxui::Screen(80, 20);
+
+  Render(screen, main_component.Render());
+  screenStr = screen.ToString();
+
+  // EnergyPlus-Cpp-Demo    │Stdout│eplusout.err│SQL Reports│About│1/3│      │↖ Quit
+  // ───────────────────────┴──────┴────────────┴───────────┴─────┴───┴──────┴───────
+  //                               ┌──────────────────┐
+  //                               │Run               │
+  //                               └──────────────────┘
+  // ──────┬────────────────────┬───────────────────────────────┬──────────┬─────────
+  // Status│      Running       │████████████████████▏      75 %│2 warnings│1 severes
+  // ──────┴────────────────────┴───────────────────────────────┴──────────┴─────────
+  // ╭Log───────────────────────────────────────────────────────────────────────────╮
+  // │Message                                                                       │
+  // ├──────────────────────────────────────────────────────────────────────────────┤
+  // │Stdout Line 1                                                                 │
+  // │Stdout Line 2                                                                 |
+  // │Stdout Line 3                                                                 │
+  // ╰──────────────────────────────────────────────────────────────────────────────╯
+
+  // EXPECT_EQ("", screen.ToString()) << screen.ToString();
+
+  EXPECT_TRUE(screenStr.find("Running") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("75 %") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("2 warnings") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("1 severes") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Stdout Line 1") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Stdout Line 2") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Stdout Line 3") != std::string::npos);
+
+  // Simulate finished run
+  senderRunOutput->Send("EnergyPlus Run Time=00hr 00min 1.16sec");
+  senderRunOutput->Send("Stdout Line 2");
+  senderRunOutput->Send("Stdout Line 3");
+
+  senderErrorOutput->Send(ErrorMessage{EnergyPlus::Error::Info, "Simulation Error Summary *************"});
+  senderErrorOutput->Send(ErrorMessage{EnergyPlus::Error::Info, "EnergyPlus Warmup Error Summary. During Warmup: 0 Warning; 0 Severe Errors."});
+  senderErrorOutput->Send(ErrorMessage{EnergyPlus::Error::Info, "EnergyPlus Sizing Error Summary. During Sizing: 0 Warning; 0 Severe Errors."});
+  senderErrorOutput->Send(
+    ErrorMessage{EnergyPlus::Error::Info, "EnergyPlus Completed Successfully-- 3 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  1.16sec"});
+
+  progress = 100;
+  main_component.OnEvent(Event::Custom);
+
+  // This isn't an interactive screen, so recreate it
+  screen = ftxui::Screen(80, 20);
+  Render(screen, main_component.Render());
+  screenStr = screen.ToString();
+
+  EXPECT_TRUE(screenStr.find("Done") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("100 %") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("2 warnings") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("1 severes") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Stdout Line 1") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Stdout Line 2") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Stdout Line 3") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("EnergyPlus Run Time=00hr 00min 1.16sec") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Open HTML") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Clear Results") != std::string::npos);
+
+  // Simulate Switching Tab to eplusout.err
+  main_component.OnEvent(Event::Home);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowUp);
+  main_component.OnEvent(Event::ArrowRight);
+
+  // This isn't an interactive screen, so recreate it
+  screen = ftxui::Screen(80, 20);
+  Render(screen, main_component.Render());
+  screenStr = screen.ToString();
+
+  // EnergyPlus-Cpp-Demo │Stdout│eplusout.err│SQL Reports│About│0/10  [10]│  │↗ Quit
+  // ────────────────────┴──────┴────────────┴───────────┴─────┴──────────┴──┴───────
+  // ╭Type─────╮
+  // │▣ Severe │
+  // │▣ Warning│
+  // │▣ Info   │
+  // ╰─────────╯
+  // ╭Log────────────┬──────────────────────────────────────────────────────────────╮
+  // │Type           │Message                                                       │
+  // ├───────────────┼──────────────────────────────────────────────────────────────┤
+  // │Severe         │A Severe Error                                               ┃│
+  // │Continue       │the Severe continues                                         ┃│
+  // ├───────────────┼─────────────────────────────────────────────────────────────┃│
+  // │Warning        │A Warning                                                    ┃│
+  // │Continue       │the Warning continues                                        ┃│
+  // ├───────────────┼─────────────────────────────────────────────────────────────┃│
+  // │Warning        │A 2nd Warning                                                ╹│
+  // │Continue       │the 2nd Warning continues                                     │
+  // ├───────────────┴───────────────────────────────────────────────────────────── │
+  // ╰──────────────────────────────────────────────────────────────────────────────╯
+
+  // EXPECT_EQ("", screen.ToString()) << screen.ToString();
+
+  EXPECT_TRUE(screenStr.find("Type") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Severe") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Warning") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Info") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Log") != std::string::npos);
+
+  EXPECT_TRUE(screenStr.find("A Severe Error") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("the Severe continues") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("A Warning") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("the Warning continues") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("A 2nd Warning") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("the 2nd Warning continues") != std::string::npos);
+
+  EXPECT_FALSE(screenStr.find("EnergyPlus Completed Successfully") != std::string::npos);
+
+  // Simulate filtering out the Warning Level
+
+  main_component.OnEvent(Event::ArrowDown);
+  main_component.OnEvent(Event::ArrowDown);
+  main_component.OnEvent(Event::Return);
+  screen = ftxui::Screen(80, 20);
+  Render(screen, main_component.Render());
+  screenStr = screen.ToString();
+
+  // EnergyPlus-Cpp-Demo │Stdout│eplusout.err│SQL Reports│About│0/8  [10]│   │→ Quit
+  // ────────────────────┴──────┴────────────┴───────────┴─────┴─────────┴───┴───────
+  // ╭Type─────╮
+  // │▣ Severe │
+  // │☐ Warning│
+  // │▣ Info   │
+  // ╰─────────╯
+  // ╭Log────────────┬──────────────────────────────────────────────────────────────╮
+  // │Type           │Message                                                       │
+  // ├───────────────┼──────────────────────────────────────────────────────────────┤
+  // │Severe         │A Severe Error                                                │
+  // │Continue       │the Severe continues                                          │
+  // ├───────────────┼──────────────────────────────────────────────────────────────┤
+  // │Info           │Simulation Error Summary *************                        │
+  // │Info           │EnergyPlus Warmup Error Summary. During Warmup: 0 Warning; 0 S│
+  // │Info           │EnergyPlus Sizing Error Summary. During Sizing: 0 Warning; 0 S│
+  // │Info           │EnergyPlus Completed Successfully-- 3 Warning; 0 Severe Errors│
+  // ╰───────────────┴──────────────────────────────────────────────────────────────╯
+
+  // EXPECT_EQ("", screen.ToString()) << screen.ToString();
+
+  EXPECT_TRUE(screenStr.find("Type") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Severe") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Warning") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Info") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("Log") != std::string::npos);
+
+  EXPECT_TRUE(screenStr.find("A Severe Error") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("the Severe continues") != std::string::npos);
+  EXPECT_FALSE(screenStr.find("A Warning") != std::string::npos);
+  EXPECT_FALSE(screenStr.find("the Warning continues") != std::string::npos);
+  EXPECT_FALSE(screenStr.find("A 2nd Warning") != std::string::npos);
+  EXPECT_FALSE(screenStr.find("the 2nd Warning continues") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("EnergyPlus Completed Successfully") != std::string::npos);
 }
