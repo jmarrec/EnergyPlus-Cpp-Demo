@@ -112,7 +112,7 @@ jobs:
       shell: bash
       run: |
         set -x
-        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release \
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING:BOOL=ON \
               -Denergyplus_DIR=${{ env.ENERGYPLUS_DIR }} \
               -DCPACK_BINARY_IFW:BOOL=ON  -DCPACK_BINARY_TGZ:BOOL=ON \
               -DCPACK_BINARY_RPM:BOOL=OFF -DCPACK_BINARY_DEB:BOOL=OFF -DCPACK_BINARY_NSIS:BOOL=OFF \
@@ -127,13 +127,19 @@ jobs:
       run: |
         echo "Using vcvarsall to initialize the development environment"
         call vcvarsall.bat x64
-        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release ^
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING:BOOL=ON ^
               -Denergyplus_DIR=${{ env.ENERGYPLUS_DIR }} ^
               -DCPACK_BINARY_IFW:BOOL=ON  -DCPACK_BINARY_TGZ:BOOL=ON ^
               -DCPACK_BINARY_RPM:BOOL=OFF -DCPACK_BINARY_DEB:BOOL=OFF -DCPACK_BINARY_NSIS:BOOL=OFF ^
               -DCPACK_BINARY_STGZ:BOOL=OFF -DCPACK_BINARY_TBZ2:BOOL=OFF -DCPACK_BINARY_TXZ:BOOL=OFF -DCPACK_BINARY_TZ:BOOL=OFF ^
               ../
         ninja package
+
+    - name: Run Tests
+      shell: bash
+      working-directory: ./build
+      run: |
+        ctest --output-on-failure
 
     - name: Archive binary artifacts
       uses: actions/upload-artifact@v3
