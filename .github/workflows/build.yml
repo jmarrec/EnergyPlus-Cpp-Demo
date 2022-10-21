@@ -70,6 +70,9 @@ jobs:
           sudo apt update
           sudo apt -y -qq install ninja-build
 
+          echo CC=gcc-10 >> $GITHUB_ENV
+          echo CXX=g++-10 >> $GITHUB_ENV
+
           EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Linux-Ubuntu20.04-x86_64
           EPLUS_INSALLER_EXT=tar.gz
 
