@@ -1,12 +1,15 @@
 #ifndef LOG_DISPLAYER_HPP
 #define LOG_DISPLAYER_HPP
 
-#include <ftxui/component/component_base.hpp>  // For ComponentBase
-#include "ftxui/screen/box.hpp"                // For Box
+#include <ftxui/component/component_base.hpp>  // for ComponentBase
+#include <ftxui/component/event.hpp>           // for Event
+#include <ftxui/screen/box.hpp>                // for Box
+#include <ftxui/dom/elements.hpp>              // for Element
 
-#include "ErrorMessage.hpp"
+#include <string>  // for string
+#include <vector>  // for vector
 
-#include <vector>
+struct ErrorMessage;
 
 using namespace ftxui;
 

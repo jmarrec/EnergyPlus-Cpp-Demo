@@ -1,10 +1,16 @@
 #include "LogDisplayer.hpp"
-#include "ErrorMessage.hpp"
+#include "ErrorMessage.hpp"  // for ErrorMessage
 
-#include <TypeDefs.h>
-#include <ftxui/dom/elements.hpp>
-#include <ftxui/screen/string.hpp>
-#include <ftxui/component/event.hpp>
+#include <EnergyPlus/api/TypeDefs.h>  // for Error, Error::Continue, Error::Fatal, Error::Info
+
+#include <ftxui/component/event.hpp>  // for Event, Event::ArrowDown, Event:...
+#include <ftxui/component/mouse.hpp>  // for Mouse, Mouse::WheelDown, Mouse:...
+#include <ftxui/dom/deprecated.hpp>   // for text
+#include <ftxui/dom/elements.hpp>     // for operator|, color, Element, Deco...
+#include <ftxui/screen/box.hpp>       // for Box
+#include <ftxui/screen/color.hpp>     // for Color, Color::Blue, Color::Re
+
+#include <algorithm>  // for max, min
 #include <map>
 
 namespace {
