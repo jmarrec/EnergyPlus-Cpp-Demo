@@ -6,8 +6,47 @@
   { include: ["@<ctre/.*>", "private", "<ctre.hpp>", "public"]},
   { include: ["@<ctll/.*>", "private", "<ctre.hpp>", "public"]},
 
-  { symbol: [ "ftxtui::Event", "private", "<ftxui/component/event.hpp>", public ]},
-  { symbol: [ "EnergyPlus::Error", "private", "<EnergyPlus/api/TypeDefs.h>", public ]},
+  { symbol: [ "ftxtui::Event", "private", "<ftxui/component/event.hpp>", "public"]},
+  { symbol: [ "EnergyPlus::Error", "private", "<EnergyPlus/api/TypeDefs.h>", "public"]},
+
+  # Allow getting the ftxui namespace from any file
+  { symbol: ["ftxui", "private", "<ftxui/component/component.hpp>", "public"]},
+  { symbol: ["ftxui", "private", "<ftxui/component/component_base.hpp>", "public"]},
+  { symbol: ["ftxui", "private", "<ftxui/component/component_options.hpp>", "public"]},
+  { symbol: ["ftxui", "private", "<ftxui/component/event.hpp>", "public"]},
+  { symbol: ["ftxui", "private", "<ftxui/component/receiver.hpp>", "public"]},
+  { symbol: ["ftxui", "private", "<ftxui/component/screen_interactive.hpp>", "public"]},
+  { symbol: ["ftxui", "private", "<ftxui/dom/elements.hpp>", "public"]},
+  { symbol: ["ftxui", "private", "<ftxui/screen/box.hpp>", "public"]},
+  { symbol: ["ftxui", "private", "<ftxui/screen/color.hpp>", "public"]},
+
+  {include: ["<fmt/core.h>", "private", "<fmt/format.h>", "public"]},
+
+  # Allow getting size_t from usual headers
+  {symbol: ["size_t", "private", "<vector>", "public"]},
+  {symbol: ["std::size_t", "private", "<vector>", "public"]},
+  {symbol: ["size_t", "private", "<string>", "public"]},
+  {symbol: ["std::size_t", "private", "<string>", "public"]},
+  {symbol: ["size_t", "private", "<array>", "public"]},
+  {symbol: ["std::size_t", "private", "<array>", "public"]},
+
+  # allow getting std::pair from map header
+  {symbol: ["std::pair", "private", "<map>", "public"]},
+  {symbol: ["std::pair", "private", "<unordered_map>", "public"]},
+  {symbol: ["std::pair", "private", "\"chemfiles/sorted_set.hpp\"", "public"]},
+  {symbol: ["std::pair", "private", "\"chemfiles/Property.hpp\"", "public"]},
+
+  # allow getting std::move/std::forward from any header
+  {symbol: ["std::move", "private", "<string>", "public"]},
+  {symbol: ["std::forward", "private", "<string>", "public"]},
+  {symbol: ["std::move", "private", "<vector>", "public"]},
+  {symbol: ["std::forward", "private", "<vector>", "public"]},
+  {symbol: ["std::move", "private", "<array>", "public"]},
+  {symbol: ["std::forward", "private", "<array>", "public"]},
+  {symbol: ["std::move", "private", "<mutex>", "public"]},
+  {symbol: ["std::forward", "private", "<mutex>", "public"]},
+  {symbol: ["std::move", "private", "<utility>", "public"]},
+  {symbol: ["std::forward", "private", "<utility>", "public"]},
 
   # Iwui is very broken on AppleClang 14.0
   { include: ["@<__algorithm/.*>", "private", "<algorithm>", "public"]},

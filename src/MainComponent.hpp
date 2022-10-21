@@ -11,6 +11,7 @@
 #include <ftxui/component/component.hpp>          // for Make, Button, Toggle
 #include <ftxui/component/component_base.hpp>     // for ComponentBase
 #include <ftxui/component/component_options.hpp>  // for ButtonOption
+#include <ftxui/component/event.hpp>              // for Event
 #include <ftxui/component/receiver.hpp>           // for Receiver
 #include <ftxui/dom/elements.hpp>                 // for Element
                                                   //

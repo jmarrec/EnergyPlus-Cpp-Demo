@@ -19,7 +19,6 @@
 #include <memory>                                  // for allocator, shared_ptr
 #include <string>                                  // for string, basic_string
 #include <thread>                                  // for thread
-#include <utility>                                 // for move
                                                    //
 #include <fmt/format.h>                            // for formatting
 #include <fmt/chrono.h>                            // for formatting std::chrono::time_point<std::chrono::system_clock>

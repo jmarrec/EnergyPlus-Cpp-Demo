@@ -23,7 +23,6 @@
 #include <set>                            // for set
 #include <string>                         // for string, to_string, char_traits, getline
 #include <string_view>                    // for operator==, basic_string_view
-#include <utility>                        // for move
 
 using namespace ftxui;
 namespace fs = std::filesystem;

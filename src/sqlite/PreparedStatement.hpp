@@ -1,9 +1,8 @@
 #ifndef SQL_PREPAREDSTATEMENT_HPP
 #define SQL_PREPAREDSTATEMENT_HPP
 
-#include <fmt/core.h>  // for format
+#include <fmt/format.h>  // for format
 
-#include <cstddef>    // for size_t
 #include <optional>   // for optional
 #include <stdexcept>  // for runtime_error
 #include <string>     // for string, allocator, operator+, wstring

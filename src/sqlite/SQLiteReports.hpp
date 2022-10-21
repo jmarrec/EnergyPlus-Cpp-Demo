@@ -9,7 +9,6 @@
 #include <optional>     // for optional
 #include <string>       // for string
 #include <string_view>  // for basic_string_view, str...
-#include <utility>      // for move
 #include <vector>       // for vector
 
 struct sqlite3;
