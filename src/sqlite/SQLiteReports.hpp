@@ -19,13 +19,15 @@ struct UnmetHoursTableRow
 {
   static constexpr std::array<std::string_view, 4> headers = {"During Heating", "During Cooling", "During Occupied Heating",
                                                               "During Occupied Cooling"};
-  UnmetHoursTableRow(std::string t_zoneName, std::array<double, 4>& vals)
+  UnmetHoursTableRow(std::string t_zoneName, const std::array<double, 4>& vals)
     : zoneName(std::move(t_zoneName)), duringHeating(vals[0]), duringCooling(vals[1]), duringOccHeating(vals[2]), duringOccCooling(vals[3]) {}
   std::string zoneName;
   double duringHeating;
   double duringCooling;
   double duringOccHeating;
   double duringOccCooling;
+
+  friend auto operator<=>(const UnmetHoursTableRow&, const UnmetHoursTableRow&) = default;
 };
 
 // template <size_t ROW_SIZE, size_t COL_SIZE>

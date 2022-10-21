@@ -1,8 +1,9 @@
 [requires]
 fmt/9.1.0@#78313935d914fe65715ad39687445de6
 ftxui/3.0.0@#a9b65e098f8a8de36e9d6db5f9aa59c4
-sqlite3/3.39.4#4696fbae3dc20230766bab27179720bb
-ctre/3.7.1#d738972b49ba6f47fda3d4a5072ecfae
+sqlite3/3.39.4@#4696fbae3dc20230766bab27179720bb
+ctre/3.7.1@#d738972b49ba6f47fda3d4a5072ecfae
+gtest/1.12.1@#a55e42c8626e1abee93825095a388580
 
 [generators]
 CMakeToolchain

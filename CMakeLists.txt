@@ -47,6 +47,8 @@ endif()
   #cmake_policy(SET CMP0077 NEW)
 #endif()
 
+option(BUILD_TESTING OFF "Enable Tests")
+
 add_library(project_options INTERFACE)
 target_compile_features(project_options INTERFACE cxx_std_20)
 
@@ -132,6 +134,7 @@ find_package(ftxui REQUIRED)
 find_package(SQLite3 REQUIRED)
 find_package(ctre REQUIRED)
 
+
 ###############################################################################
 #                             E N E R G Y P L U S                             #
 ###############################################################################
@@ -158,8 +161,7 @@ endif()
 
 find_program(iwyu_path NAMES include-what-you-use iwyu)
 
-add_executable(epcli
-  src/main.cpp
+add_library(epcli_lib
   src/MainComponent.hpp
   src/MainComponent.cpp
 
@@ -187,16 +189,31 @@ add_executable(epcli
   src/ftxui/modal.cpp
 )
 
-target_link_libraries(epcli
-  PRIVATE
-  project_options
+set(epcli_lib_depends
   fmt::fmt
-  # ftxui::screen
-  # ftxui::dom
-  # ftxui::component
   ftxui::ftxui
   SQLite::SQLite3
   ctre::ctre
+  energyplus::energyplusapi
+)
+
+target_link_libraries(epcli_lib
+  PRIVATE
+  project_options
+  ${epcli_lib_depends}
+)
+target_compile_definitions(epcli_lib PRIVATE ENERGYPLUS_ROOT="$<TARGET_FILE_DIR:energyplus::energyplusapi>")
+
+add_executable(epcli
+  src/main.cpp
+)
+
+target_link_libraries(epcli
+  PRIVATE
+  project_options
+  epcli_lib
+  fmt::fmt
+  ftxui::ftxui
   energyplus::energyplusapi
 )
 
@@ -218,13 +235,30 @@ if(APPLE)
   )
 endif()
 
-target_compile_definitions(epcli PRIVATE ENERGYPLUS_ROOT="$<TARGET_FILE_DIR:energyplus::energyplusapi>")
 
-# enable_testing()
-# include(GoogleTest)
-# gtest_discover_tests(testlib_tests
-#   # WORKING_DIRECTORY Testing
-# )
+if(BUILD_TESTING)
+  find_package(GTest REQUIRED)
+
+  add_executable(epcli_tests
+    test/EPCLI_GTests.cpp
+  )
+  target_link_libraries(epcli_tests
+    PRIVATE
+    epcli_lib
+    ${epcli_lib_depends}
+    gtest::gtest
+  )
+  target_compile_definitions(epcli_tests PRIVATE TEST_DIR="${CMAKE_CURRENT_SOURCE_DIR}/test/")
+
+  enable_testing()
+
+  include(GoogleTest)
+  gtest_discover_tests(epcli_tests
+    # WORKING_DIRECTORY Testing
+  )
+
+endif()
+
 
 set(LIB_DESTINATION_DIR "lib")
 if(WIN32)
