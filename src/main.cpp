@@ -2,30 +2,29 @@
 #include "ErrorMessage.hpp"
 #include "EnergyPlus.hpp"
 
-#include <ftxui/component/captured_mouse.hpp>      // for ftxui
-#include "ftxui/component/component.hpp"           // for Button, operator|=, Renderer, Vertical, Modal
+#include "ftxui/component/component.hpp"           // for Button
 #include <ftxui/component/component_base.hpp>      // for ComponentBase
-#include <ftxui/component/component_options.hpp>   //
-#include <ftxui/component/screen_interactive.hpp>  // for Component, ScreenInteractive
-#include <ftxui/dom/elements.hpp>                  // for operator|, Element, size, border, frame, vscroll_indicator, HEIGHT, LESS_THAN
-#include <ftxui/dom/table.hpp>                     // for Table, TableSelection
-#include <ftxui/screen/screen.hpp>                 // for Screen
-#include <ftxui/screen/color.hpp>
-#include <ftxui/dom/node.hpp>
-#include <ftxui/component/receiver.hpp>
+#include <ftxui/component/component_options.hpp>   // for ButtonOption
+#include <ftxui/component/receiver.hpp>            // for MakeReceiver, Sender
+#include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive
+#include <ftxui/dom/elements.hpp>                  // for Element, text, operator|
 
 // TODO: temp, FTXUI 3.0.0 doesn't include this component yet, it's only on master.
 #include "ftxui/modal.hpp"
 
-#include <algorithm>   // for min, max
 #include <atomic>      // for atomic
 #include <chrono>      // for operator""s, chrono_literals
-#include <filesystem>  // for path
-#include <utility>
+#include <cstdlib>     // for exit
+#include <filesystem>  // for path, absolute
+#include <functional>  // for function
+#include <memory>      // for allocator, shared_ptr
+#include <string>      // for string, basic_string
+#include <thread>      // for thread
+#include <utility>     // for move
 
-#include <fmt/format.h>
-#include <fmt/chrono.h>
-#include <fmt/std.h>  // for formatting std::filesystem::path
+#include <fmt/format.h>  // for formatting
+#include <fmt/chrono.h>  // for formatting std::chrono::time_point<std::chrono::system_clock>
+#include <fmt/std.h>     // for formatting std::filesystem::path
 
 #ifdef _WIN32
 #  define __PRETTY_FUNCTION__ __FUNCSIG__
@@ -151,7 +150,7 @@ int main(int argc, const char* argv[]) {
   //   renderer_runOutput,
   // }));
 
-  std::cout << std::endl;
+  fmt::print("\n");
 
   // This is a compile definition
   // fmt::print("{}\n", ENERGYPLUS_ROOT);

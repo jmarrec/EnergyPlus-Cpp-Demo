@@ -4,7 +4,7 @@
 
 #include <EnergyPlus/api/TypeDefs.h>  // for Error
 #include <EnergyPlus/api/func.h>      // for registerErrorCallback
-#include <EnergyPlus/api/runtime.h>   // for energyplus, regist...
+#include <EnergyPlus/api/runtime.h>   // for energyplus, registerStdOutCallback, registerProgressCallback
 #include <EnergyPlus/api/state.h>     // for stateDelete, stateNew
 
 #include <ftxui/component/event.hpp>               // for Event, Event::Custom

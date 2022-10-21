@@ -1,12 +1,16 @@
 #ifndef SQL_SQLITEREPORTS_HPP
 #define SQL_SQLITEREPORTS_HPP
 
-#include <ftxui/component/component.hpp>
+#include <ftxui/component/component_base.hpp>  // for ComponentBase
+#include <ftxui/dom/elements.hpp>              // for Element
 
-#include <array>
-#include <filesystem>
-#include <optional>
-#include <string_view>
+#include <array>        // for array
+#include <filesystem>   // for path
+#include <optional>     // for optional
+#include <string>       // for string
+#include <string_view>  // for basic_string_view, str...
+#include <utility>      // for move
+#include <vector>       // for vector
 
 struct sqlite3;
 

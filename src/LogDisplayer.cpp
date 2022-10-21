@@ -5,10 +5,9 @@
 
 #include <ftxui/component/event.hpp>  // for Event, Event::ArrowDown, Event:...
 #include <ftxui/component/mouse.hpp>  // for Mouse, Mouse::WheelDown, Mouse:...
-#include <ftxui/dom/deprecated.hpp>   // for text
-#include <ftxui/dom/elements.hpp>     // for operator|, color, Element, Deco...
+#include <ftxui/dom/elements.hpp>     // for text, operator|, color, Element, Decorator
 #include <ftxui/screen/box.hpp>       // for Box
-#include <ftxui/screen/color.hpp>     // for Color, Color::Blue, Color::Re
+#include <ftxui/screen/color.hpp>     // for Color, Color::Blue, Color::Red
 
 #include <algorithm>  // for max, min
 #include <map>
@@ -42,8 +41,8 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
   size_message += 5;
 
   auto header = hbox({
-    text(L"Type") | ftxui::size(WIDTH, EQUAL, size_level), separator(),
-    text(L"Message") | flex,  // Or instead of flex: | ftxui::size(WIDTH, EQUAL, size_message),
+    text("Type") | ftxui::size(WIDTH, EQUAL, size_level), separator(),
+    text("Message") | flex,  // Or instead of flex: | ftxui::size(WIDTH, EQUAL, size_message),
   });
 
   int previous_type = !lines.empty() ? static_cast<int>(lines[0]->error) : -1;
@@ -81,14 +80,14 @@ Element LogDisplayer::RenderLines(std::vector<ErrorMessage*> lines) {
   }
 
   if (list.empty()) {
-    list.push_back(text(L"(empty)"));
+    list.push_back(text("(empty)"));
   }
 
-  return window(text(L"Log"), vbox({
-                                header,
-                                separator(),
-                                vbox(list) | vscroll_indicator | yframe | reflect(box_),
-                              }));
+  return window(text("Log"), vbox({
+                               header,
+                               separator(),
+                               vbox(list) | vscroll_indicator | yframe | reflect(box_),
+                             }));
 }
 
 Element LogDisplayer::RenderLines(const std::vector<std::string>& lines) {
@@ -103,7 +102,7 @@ Element LogDisplayer::RenderLines(const std::vector<std::string>& lines) {
   size_message += 5;
 
   auto header = hbox({
-    text(L"Message") | flex,  // Or instead of flex: | ftxui::size(WIDTH, EQUAL, size_message),
+    text("Message") | flex,  // Or instead of flex: | ftxui::size(WIDTH, EQUAL, size_message),
   });
 
   int index = 0;
@@ -124,14 +123,14 @@ Element LogDisplayer::RenderLines(const std::vector<std::string>& lines) {
   }
 
   if (list.empty()) {
-    list.push_back(text(L"(empty)"));
+    list.push_back(text("(empty)"));
   }
 
-  return window(text(L"Log"), vbox({
-                                header,
-                                separator(),
-                                vbox(list) | vscroll_indicator | yframe | reflect(box_),
-                              }));
+  return window(text("Log"), vbox({
+                               header,
+                               separator(),
+                               vbox(list) | vscroll_indicator | yframe | reflect(box_),
+                             }));
 }
 
 int LogDisplayer::selected() const {

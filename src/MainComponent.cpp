@@ -1,27 +1,33 @@
 #include "MainComponent.hpp"
-#include "sqlite/SQLiteReports.hpp"
-#include "utilities/ASCIIStrings.hpp"
 
-#include <EnergyPlus/api/TypeDefs.h>
-
-#include <ftxui/dom/elements.hpp>
-#include <ftxui/component/component.hpp>
-#include <ftxui/screen/string.hpp>
-
-#include <ctre.hpp>
-#include <fmt/format.h>
-#include <fmt/std.h>
-
-#include <filesystem>
-#include <fstream>
-#include <utility>
-#include <set>
-#include <string>
+#include "sqlite/SQLiteReports.hpp"       // for SQLiteComponent
+#include "utilities/ASCIIStrings.hpp"     // for ascii_trim
+                                          //
+#include <EnergyPlus/api/TypeDefs.h>      // for Error
+                                          //
+#include <ftxui/component/component.hpp>  // for Horizontal, Vertical, Tab
+#include <ftxui/component/event.hpp>      // for Event
+#include <ftxui/dom/elements.hpp>         // for text, separator, operator|
+                                          //
+#include <ctre.hpp>                       // for CTRE
+                                          //
+#include <fmt/format.h>                   // for formatting
+#include <fmt/std.h>                      // for formatting std::filesystem::path
+                                          //
+#include <algorithm>                      // for max, min
+#include <chrono>                         // for filesystem
+#include <cstdlib>                        // for system
+#include <filesystem>                     // for operator/, path, is_regular...
+#include <fstream>                        // for ifstream
+#include <set>                            // for set
+#include <string>                         // for string, allocator, char_traits
+#include <string_view>                    // for operator==, basic_string_view
+#include <utility>                        // for move
 
 using namespace ftxui;
 namespace fs = std::filesystem;
 
-static constexpr auto programName = L"EnergyPlus-Cpp-Demo";
+static constexpr auto programName = "EnergyPlus-Cpp-Demo";
 
 MainComponent::MainComponent(Receiver<std::string> receiverRunOutput, Receiver<ErrorMessage> receiverErrorOutput, Component runButton,
                              Component quitButton, std::atomic<int>* progress, std::filesystem::path outputDirectory)
@@ -221,9 +227,9 @@ Element MainComponent::Render() {
       separator(),
       hcenter(toggle_->Render()) | color(Color::Yellow),
       separator(),
-      text(to_wstring(current_line + 1)),
-      text(L"/"),
-      text(to_wstring(m_stdout_lines.size())),
+      text(std::to_string(current_line + 1)),
+      text("/"),
+      text(std::to_string(m_stdout_lines.size())),
       separator(),
       gauge(float(current_line) / float(std::max(1, (int)m_stdout_lines.size() - 1))) | color(Color::GrayDark),
       separator(),
@@ -312,12 +318,12 @@ Element MainComponent::Render() {
       separator(),
       hcenter(toggle_->Render()) | color(Color::Red),
       separator(),
-      text(to_wstring(current_line)),
-      text(L"/"),
-      text(to_wstring(filtered_errorMsgs.size())),
-      text(L"  ["),
-      text(to_wstring(m_errors.size())),
-      text(L"]"),
+      text(std::to_string(current_line)),
+      text("/"),
+      text(std::to_string(filtered_errorMsgs.size())),
+      text("  ["),
+      text(std::to_string(m_errors.size())),
+      text("]"),
       separator(),
       gauge(float(current_line) / float(std::max(1, (int)filtered_errorMsgs.size() - 1))) | color(Color::GrayDark),
       separator(),
@@ -330,7 +336,7 @@ Element MainComponent::Render() {
         headerError,
         separator(),
         hbox({
-          window(text(L"Type"), container_level_filter_->Render()) | notflex,
+          window(text("Type"), container_level_filter_->Render()) | notflex,
           filler(),
         }) | notflex,
         m_error_displayer->RenderLines(filtered_errorMsgs) | flex_shrink,
@@ -345,9 +351,9 @@ Element MainComponent::Render() {
       separator(),
       hcenter(toggle_->Render()) | color(Color::Yellow),
       separator(),
-      text(to_wstring(current_line + 1)),
-      text(L"/"),
-      text(to_wstring(m_stdout_lines.size())),
+      text(std::to_string(current_line + 1)),
+      text("/"),
+      text(std::to_string(m_stdout_lines.size())),
       separator(),
       gauge(float(current_line) / float(std::max(1, (int)m_stdout_lines.size() - 1))) | color(Color::GrayDark),
       separator(),

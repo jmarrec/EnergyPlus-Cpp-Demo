@@ -1,18 +1,25 @@
 #ifndef MAIN_COMPONENT_HPP
 #define MAIN_COMPONENT_HPP
 
-#include "AboutComponent.hpp"
-#include "ErrorMessage.hpp"
-#include "LogDisplayer.hpp"
-#include "sqlite/SQLiteReports.hpp"
-
-#include <ftxui/component/component.hpp>
-#include <ftxui/component/receiver.hpp>
-
-#include <filesystem>
-#include <map>
-#include <string>
-#include <vector>
+#include "AboutComponent.hpp"                     // for AboutComponent
+#include "ErrorMessage.hpp"                       // for ErrorMessage
+#include "LogDisplayer.hpp"                       // for LogDisplayer
+#include "sqlite/SQLiteReports.hpp"               // for SQLiteComponent
+                                                  //
+#include <EnergyPlus/api/TypeDefs.h>              // for Error
+                                                  //
+#include <ftxui/component/component.hpp>          // for Make, Button, Toggle
+#include <ftxui/component/component_base.hpp>     // for ComponentBase
+#include <ftxui/component/component_options.hpp>  // for ButtonOption
+#include <ftxui/component/receiver.hpp>           // for Receiver
+#include <ftxui/dom/elements.hpp>                 // for Element
+                                                  //
+#include <atomic>                                 // for atomic
+#include <filesystem>                             // for path
+#include <map>                                    // for map
+#include <memory>                                 // for shared_ptr
+#include <string>                                 // for string, allocator
+#include <vector>                                 // for vector
 
 using namespace ftxui;
 

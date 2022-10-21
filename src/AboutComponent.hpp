@@ -1,7 +1,8 @@
 #ifndef ABOUT_COMPONENT_HPP
 #define ABOUT_COMPONENT_HPP
 
-#include <ftxui/component/component.hpp>
+#include <ftxui/component/component_base.hpp>  // for ComponentBase
+#include <ftxui/dom/elements.hpp>              // for Element
 
 using namespace ftxui;
 
