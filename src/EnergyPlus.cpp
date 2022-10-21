@@ -1,13 +1,21 @@
 #include "EnergyPlus.hpp"
-#include "utilities/ASCIIStrings.hpp"
 
-#include <EnergyPlus/api/runtime.h>
-#include <EnergyPlus/api/state.h>
-#include <EnergyPlus/api/func.h>
-#include <EnergyPlus/api/TypeDefs.h>
+#include "ErrorMessage.hpp"            // for ErrorMessage
+#include "utilities/ASCIIStrings.hpp"  // for ascii_to_lower_copy
 
-#include <array>      // For array
-#include <algorithm>  // For find
+#include <EnergyPlus/api/TypeDefs.h>  // for Error
+#include <EnergyPlus/api/func.h>      // for registerErrorCallback
+#include <EnergyPlus/api/runtime.h>   // for energyplus, registerStdOut/ProgressCallback, setConsoleOutputState, setEnergyPlusRootDirectory
+#include <EnergyPlus/api/state.h>     // for stateDelete, stateNew, EnergyPlusState
+
+#include <ftxui/component/event.hpp>               // for Event, Event::Custom
+#include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive
+
+#include <algorithm>    // for find
+#include <atomic>       // for atomic
+#include <array>        // for array
+#include <memory>       // for unique_ptr
+#include <string_view>  // for string_view
 
 namespace epcli {
 

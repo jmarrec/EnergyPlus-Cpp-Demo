@@ -1,31 +1,29 @@
-#include "MainComponent.hpp"
-#include "ErrorMessage.hpp"
-#include "EnergyPlus.hpp"
-
-#include <ftxui/component/captured_mouse.hpp>      // for ftxui
-#include "ftxui/component/component.hpp"           // for Button, operator|=, Renderer, Vertical, Modal
+#include "EnergyPlus.hpp"                          // for validateFileType, runEnergyPlus
+#include "ErrorMessage.hpp"                        // for ErrorMessage
+#include "MainComponent.hpp"                       // for MainComponent
+                                                   //
+#include "ftxui/component/component.hpp"           // for Button, Renderer, Vertical, operator|=
 #include <ftxui/component/component_base.hpp>      // for ComponentBase
-#include <ftxui/component/component_options.hpp>   //
-#include <ftxui/component/screen_interactive.hpp>  // for Component, ScreenInteractive
-#include <ftxui/dom/elements.hpp>                  // for operator|, Element, size, border, frame, vscroll_indicator, HEIGHT, LESS_THAN
-#include <ftxui/dom/table.hpp>                     // for Table, TableSelection
-#include <ftxui/screen/screen.hpp>                 // for Screen
-#include <ftxui/screen/color.hpp>
-#include <ftxui/dom/node.hpp>
-#include <ftxui/component/receiver.hpp>
-
-// TODO: temp, FTXUI 3.0.0 doesn't include this component yet, it's only on master.
-#include "ftxui/modal.hpp"
-
-#include <algorithm>   // for min, max
-#include <atomic>      // for atomic
-#include <chrono>      // for operator""s, chrono_literals
-#include <filesystem>  // for path
-#include <utility>
-
-#include <fmt/format.h>
-#include <fmt/chrono.h>
-#include <fmt/std.h>  // for formatting std::filesystem::path
+#include <ftxui/component/component_options.hpp>   // for ButtonOption
+#include <ftxui/component/receiver.hpp>            // for MakeReceiver, Sender
+#include <ftxui/component/screen_interactive.hpp>  // for ScreenInteractive
+#include <ftxui/dom/elements.hpp>                  // for Element, text, operator|, separator, size, vbox, border, Constraint, Direction
+                                                   //
+#include "ftxui/modal.hpp"                         // For Modal // TODO: temp, FTXUI 3.0.0 doesn't include this component yet, it's only on master.
+                                                   //
+#include <atomic>                                  // for atomic
+#include <chrono>                                  // for system_clock, duration, time_point
+#include <cstdlib>                                 // for exit
+#include <filesystem>                              // for path, absolute, is_regular_file, last_write_time, file_time_type, operator/
+#include <functional>                              // for function
+#include <memory>                                  // for allocator, shared_ptr
+#include <string>                                  // for string, basic_string
+#include <thread>                                  // for thread
+#include <utility>                                 // for move
+                                                   //
+#include <fmt/format.h>                            // for formatting
+#include <fmt/chrono.h>                            // for formatting std::chrono::time_point<std::chrono::system_clock>
+#include <fmt/std.h>                               // for formatting std::filesystem::path
 
 #ifdef _WIN32
 #  define __PRETTY_FUNCTION__ __FUNCSIG__
@@ -126,7 +124,7 @@ int main(int argc, const char* argv[]) {
   auto quit_button = ftxui::Button(&quit_text, screen.ExitLoopClosure(), ftxui::ButtonOption::Ascii());
 
   main_component = std::make_shared<MainComponent>(std::move(receiverRunOutput), std::move(receiverErrorOutput), std::move(run_button),
-                                                   std::move(quit_button), &progress, std::move(outputDirectory));
+                                                   std::move(quit_button), &progress, outputDirectory);
 
   auto hide_modal = [&modal_reload_shown] { modal_reload_shown = false; };
   auto reload_results = [&main_component, &modal_reload_shown]() {
@@ -151,7 +149,7 @@ int main(int argc, const char* argv[]) {
   //   renderer_runOutput,
   // }));
 
-  std::cout << std::endl;
+  fmt::print("\n");
 
   // This is a compile definition
   // fmt::print("{}\n", ENERGYPLUS_ROOT);

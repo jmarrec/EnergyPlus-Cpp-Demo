@@ -1,17 +1,21 @@
-#include "PreparedStatement.hpp"
 #include "SQLiteReports.hpp"
 
-#include <ftxui/component/component.hpp>
-#include <sqlite3.h>
-
-#include <ctre.hpp>
-#include <fmt/format.h>
-
-#include <array>
-#include <filesystem>
-#include <optional>
-#include <string>
-#include <utility>
+#include "PreparedStatement.hpp"   // for PreparedStatement
+                                   //
+#include <ftxui/dom/elements.hpp>  // for operator|, Element, separator, text, size, hcenter, vbox, Constraint, Direction, Elements, flex
+                                   //
+#include <sqlite3.h>               // for sqlite3_close, sqlite3_open_v2, SQLITE_OPEN_READONLY
+#include <ctre.hpp>                // For CTRE
+#include <fmt/core.h>              // for format
+                                   //
+#include <cstddef>                 // for size_t
+#include <algorithm>               // for max
+#include <array>                   // for array
+#include <filesystem>              // for path, copy_file, operator/, temp_directory_path, copy_options
+#include <optional>                // for optional
+#include <stdexcept>               // for runtime_error
+#include <string>                  // for string
+#include <utility>                 // for move
 
 using namespace ftxui;
 
@@ -285,11 +289,11 @@ ftxui::Element RenderHighLevelInfo(const sql::SQLiteReports& report) {
     elementList.push_back(separator());
   }
 
-  return window(text(L"High Level Info"), vbox({
-                                            header,  //
-                                            separator(),
-                                            vbox(elementList) | vscroll_indicator | yframe,  //  | reflect(box_),
-                                          }));
+  return window(text("High Level Info"), vbox({
+                                           header,  //
+                                           separator(),
+                                           vbox(elementList) | vscroll_indicator | yframe,  //  | reflect(box_),
+                                         }));
 }
 
 ftxui::Element RenderUnmetHours(const sql::SQLiteReports& report) {
@@ -346,11 +350,11 @@ ftxui::Element RenderUnmetHours(const sql::SQLiteReports& report) {
     ++i;
   }
 
-  return window(text(L"Unmet Hours"), vbox({
-                                        header,  //
-                                        separator(),
-                                        vbox(rowList) | vscroll_indicator | yframe,  //  | reflect(box_),
-                                      }));
+  return window(text("Unmet Hours"), vbox({
+                                       header,  //
+                                       separator(),
+                                       vbox(rowList) | vscroll_indicator | yframe,  //  | reflect(box_),
+                                     }));
 }
 
 ftxui::Element RenderEndUseByFuel(const sql::SQLiteReports& report) {
@@ -401,11 +405,11 @@ ftxui::Element RenderEndUseByFuel(const sql::SQLiteReports& report) {
     ++i;
   }
 
-  return window(text(L"End Use by Fuel"), vbox({
-                                            header,  //
-                                            separator(),
-                                            vbox(rowList) | vscroll_indicator | yframe,  //  | reflect(box_),
-                                          }));
+  return window(text("End Use by Fuel"), vbox({
+                                           header,  //
+                                           separator(),
+                                           vbox(rowList) | vscroll_indicator | yframe,  //  | reflect(box_),
+                                         }));
 }
 
 ftxui::Element SQLiteComponent::RenderDatabase(std::filesystem::path databasePath) {

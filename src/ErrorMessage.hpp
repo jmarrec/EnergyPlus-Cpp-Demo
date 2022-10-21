@@ -1,14 +1,14 @@
 #ifndef ERRORMESSAGE_HPP
 #define ERRORMESSAGE_HPP
 
-#include <EnergyPlus/api/TypeDefs.h>
+#include <EnergyPlus/api/TypeDefs.h>  // for Error
 
-#include <string>
+#include <string>  // for string
 
 struct ErrorMessage
 {
   ErrorMessage() = default;
-  ErrorMessage(EnergyPlus::Error t_error, std::string t_message) : error(t_error), message(std::move(t_message)) {}
+  ErrorMessage(EnergyPlus::Error t_error, std::string t_message);
   EnergyPlus::Error error;
   std::string message;
 

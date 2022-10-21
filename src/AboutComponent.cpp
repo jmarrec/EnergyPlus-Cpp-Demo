@@ -3,13 +3,13 @@
 Element AboutComponent::Render() {
   auto document = vbox({
     hbox({
-      text(L"Website                    ") | bold,
+      text("Website                    ") | bold,
       separator(),
-      text(L"https://github.com/jmarrec/EnergyPlus-Cpp-Demo"),
+      text("https://github.com/jmarrec/EnergyPlus-Cpp-Demo"),
     }),
     separator(),
     hbox({
-      text(L"Skipping Lines faster      ") | bold,
+      text("Skipping Lines faster      ") | bold,
       separator(),
       vbox({
         text("Use TAB / SHIFT+TAB to skip lines (10 TABs = all)"),

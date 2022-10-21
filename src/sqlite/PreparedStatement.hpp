@@ -1,12 +1,13 @@
 #ifndef SQL_PREPAREDSTATEMENT_HPP
 #define SQL_PREPAREDSTATEMENT_HPP
 
-#include <optional>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include <fmt/core.h>  // for format
 
-#include <fmt/format.h>
+#include <cstddef>    // for size_t
+#include <optional>   // for optional
+#include <stdexcept>  // for runtime_error
+#include <string>     // for string, allocator, operator+, wstring
+#include <vector>     // for vector
 
 struct sqlite3;
 struct sqlite3_stmt;

@@ -3,7 +3,8 @@
 #ifndef FTXUI_MODAL_HPP
 #define FTXUI_MODAL_HPP
 
-#include <ftxui/component/component.hpp>  // For Component, ComponentDecorator
+#include <ftxui/component/component.hpp>       // for ComponentDecorator
+#include <ftxui/component/component_base.hpp>  // for Component
 
 namespace ftxui {
 Component Modal(Component main, Component modal, const bool* show_modal);

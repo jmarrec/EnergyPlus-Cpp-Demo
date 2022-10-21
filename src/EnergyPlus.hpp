@@ -1,13 +1,17 @@
 #ifndef ENERGYPLUS_HPP
 #define ENERGYPLUS_HPP
 
-#include "ErrorMessage.hpp"
+#include <ftxui/component/receiver.hpp>  // For Sender
 
-#include <ftxui/component/receiver.hpp>            // For Sender
-#include <ftxui/component/screen_interactive.hpp>  // For ScreenInteractive
+#include <atomic>      // for atomic
+#include <filesystem>  // for path
+#include <string>      // for string
 
-#include <filesystem>   // For path
-#include <string_view>  // For string_view
+struct ErrorMessage;
+
+namespace ftxui {
+class ScreenInteractive;
+}
 
 namespace epcli {
 void runEnergyPlus(int argc, const char* argv[], ftxui::Sender<std::string>* senderRunOutput, ftxui::Sender<ErrorMessage>* senderErrorOutput,

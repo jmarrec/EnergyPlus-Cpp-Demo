@@ -1,0 +1,19 @@
+[
+  # Gtest
+  { include: ["@<gtest/.*>", "private", "<gtest/gtest.h>", "public"]},
+
+  # CTRE
+  { include: ["@<ctre/.*>", "private", "<ctre.hpp>", "public"]},
+  { include: ["@<ctll/.*>", "private", "<ctre.hpp>", "public"]},
+
+  { symbol: [ "ftxtui::Event", "private", "<ftxui/component/event.hpp>", public ]},
+  { symbol: [ "EnergyPlus::Error", "private", "<EnergyPlus/api/TypeDefs.h>", public ]},
+
+  # Iwui is very broken on AppleClang 14.0
+  { include: ["@<__algorithm/.*>", "private", "<algorithm>", "public"]},
+  { include: ["@<__chrono/.*>", "private", "<chrono>", "public"]},
+  { include: ["@<__functional/.*>", "private", "<functional>", "public"]},
+  { include: ["@<__memory/.*>", "private", "<memory>", "public"]},
+  { include: ["@<__utility/.*>", "private", "<utility>", "public"]},
+  { include: ["@<__filesystem/.*>", "private", "<filesystem>", "public"]},
+]
