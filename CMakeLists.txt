@@ -57,34 +57,27 @@ target_compile_features(project_options INTERFACE cxx_std_20)
 ###############################################################################
 # Ninja support: has to be atop for it to take effect before anything else is done
 # Add Color Output if Using Ninja
-macro(AddCXXFlagIfSupported flag test)
-  CHECK_CXX_COMPILER_FLAG(${flag} ${test})
-  if(${${test}})
-    message("adding ${flag}")
-    target_compile_options(project_options INTERFACE "${flag}")
-  endif()
-endmacro()
 
-if("Ninja" STREQUAL ${CMAKE_GENERATOR})
-  # Clang
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-    AddCXXFlagIfSupported(-fcolor-diagnostics COMPILER_SUPPORTS_fcolor-diagnostics)
+# Enhance error reporting and compiler messages
+if(CMAKE_CXX_COMPILER_ID MATCHES ".*Clang")
+  if(WIN32)
+    # On Windows cuda nvcc uses cl and not clang
+    add_compile_options($<$<COMPILE_LANGUAGE:C>:-fcolor-diagnostics> $<$<COMPILE_LANGUAGE:CXX>:-fcolor-diagnostics>)
+  else()
+    add_compile_options(-fcolor-diagnostics)
   endif()
-
-  # g++
-  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    # For some reason it doesn't say its supported, but it works...
-    # AddCXXFlagIfSupported(-fdiagnostics-color COMPILER_SUPPORTS_fdiagnostics-color)
-    message(STATUS "Ninja: Forcing -fdiagnostics-color=always")
-    target_compile_options(project_options INTERFACE -fdiagnostics-color=always)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(WIN32)
+    # On Windows cuda nvcc uses cl and not gcc
+    add_compile_options($<$<COMPILE_LANGUAGE:C>:-fdiagnostics-color=always>
+                        $<$<COMPILE_LANGUAGE:CXX>:-fdiagnostics-color=always>)
+  else()
+    add_compile_options(-fdiagnostics-color=always)
   endif()
-endif()
-
-# Xcode/Ninja generators undefined MAKE
-if(CMAKE_GENERATOR MATCHES "Make")
-  set(MAKE "$(MAKE)")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" AND MSVC_VERSION GREATER 1900)
+  add_compile_options(/diagnostics:column)
 else()
-  set(MAKE make)
+  message(STATUS "No colored compiler diagnostic set for '${CMAKE_CXX_COMPILER_ID}' compiler.")
 endif()
 
 # Enable runtime checking features: TSAN, ASAN, UBSAN
