@@ -1,0 +1,66 @@
+name: clang-tidy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CC: clang-14
+  CXX: clang++-14
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Install conan
+      shell: bash
+      run: |
+          python --version
+          pip install conan
+          conan --version
+          echo "Enabling conan revisions and setting parallel_download"
+          conan config set general.revisions_enabled=True
+          conan config set general.parallel_download=8
+          conan profile new --detect default
+          conan profile update settings.compiler.libcxx=libstdc++11 default
+          mkdir build
+
+    - name: Generate compile_commands.json
+      shell: bash
+      working-directory: ./build
+      run: |
+        cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON ../
+
+    - name: Run Clang-tidy
+      shell: bash
+      working-directory: ./build
+      run: |
+        run-clang-tidy-14 -config-file=../.clang-tidy -fix -format -extra-arg=-Wno-unknown-warning-option
+
+        # clang-tidy will auto correct files so prepare the diff and use this as artifact
+        git diff > clang_tidy.patch
+
+        # Delete if nothhing otherwise exit 1 to indicate a failed job
+        if [ ! -s clang_tidy.patch ]
+        then
+            rm clang_tidy.patch
+            exit 0
+        else
+            echo "clang-format auto corrected files:"
+            git diff --name-only
+            echo -e "\nPlease correct these files."
+          exit 1
+        fi
+
+        exit 0
+
+    - name: Upload clang-tidy patch as artifact
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v3
+      with:
+          name: EnergyPlus-Cpp-Demo-${{ github.sha }}-clang_tidy.patch
+          path: clang_tidy.patch
