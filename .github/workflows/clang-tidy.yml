@@ -19,7 +19,7 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install conan
+    - name: Install conan and dependencies
       shell: bash
       run: |
           python --version
@@ -30,23 +30,21 @@ jobs:
           conan config set general.parallel_download=8
           conan profile new --detect default
           conan profile update settings.compiler.libcxx=libstdc++11 default
-          mkdir build
+          echo "Using apt to install ninja"
+          sudo apt update
+          sudo apt -y -qq install ninja-build
+          echo "Conan install dependencies"
+          conan install . -pr:b=default -b missing -if build/ -of build/ -c tools.cmake.cmaketoolchain:generator=Ninja
 
     - name: Generate compile_commands.json
       shell: bash
       working-directory: ./build
       run: |
         set -x
-        echo "Using apt to install ninja"
-        sudo apt update
-        sudo apt -y -qq install ninja-build
 
         curl -L -O ${{ env.ENERGYPLUS_RELEASE_ENDPOINT }}/$EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
         cmake -E tar xfz $EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
         echo "ENERGYPLUS_DIR=$(pwd)/$EPLUS_INSTALLER_NAME" >> $GITHUB_ENV
-
-        echo "Conan install"
-        conan install . -pr:b=default -b missing -if build/ -of build/ -c tools.cmake.cmaketoolchain:generator=Ninja
 
         echo "Cmake"
         cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING:BOOL=ON \
