@@ -33,7 +33,23 @@ jobs:
       shell: bash
       working-directory: ./build
       run: |
-        cmake -DCMAKE_BUILD_TYPE:STRING=Release -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON ../
+        set -x
+        echo "Using apt to install ninja"
+        sudo apt update
+        sudo apt -y -qq install ninja-build
+        EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Linux-Ubuntu20.04-x86_64
+        EPLUS_INSALLER_EXT=tar.gz
+        curl -L -O ${{ env.ENERGYPLUS_RELEASE_ENDPOINT }}/$EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
+        cmake -E tar xfz $EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
+        echo "ENERGYPLUS_DIR=$(pwd)/$EPLUS_INSTALLER_NAME" >> $GITHUB_ENV
+
+        echo "Conan install"
+        conan install . -pr:b=default -b missing -if build/ -of build/ -c tools.cmake.cmaketoolchain:generator=Ninja
+
+        echo "Cmake"
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING:BOOL=ON \
+              -Denergyplus_DIR=${{ env.ENERGYPLUS_DIR }} -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON \
+              ../
 
     - name: Run Clang-tidy
       shell: bash
