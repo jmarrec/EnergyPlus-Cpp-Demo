@@ -5,6 +5,7 @@
 #include <ftxui/dom/elements.hpp>              // for Element
 
 #include <array>        // for array
+#include <compare>      // for operator<=>
 #include <filesystem>   // for path
 #include <optional>     // for optional
 #include <string>       // for string
