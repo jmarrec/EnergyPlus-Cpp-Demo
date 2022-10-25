@@ -70,8 +70,8 @@ jobs:
           echo "Adding SDKROOT to GITHUB_ENV"
           echo "SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" >> $GITHUB_ENV
 
-          echo CC=$(brew --prefix llvm@14)/bin/clang >> $GITHUB_ENV
-          echo CXX=$(brew --prefix llvm@14)/bin/clang++  >> $GITHUB_ENV
+          #echo CC=$(brew --prefix llvm@14)/bin/clang >> $GITHUB_ENV
+          #echo CXX=$(brew --prefix llvm@14)/bin/clang++  >> $GITHUB_ENV
 
           EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Darwin-macOS10.15-x86_64
           EPLUS_INSALLER_EXT=tar.gz
