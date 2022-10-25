@@ -29,6 +29,13 @@ struct UnmetHoursTableRow
   double duringOccCooling;
 
   auto operator<=>(const UnmetHoursTableRow&) const = default;
+
+#if __APPLE__
+  bool operator==(const UnmetHoursTableRow& other) const {
+    return zoneName == other.zoneName && duringHeating == other.duringHeating && duringCooling == other.duringCooling
+           && duringOccHeating == other.duringOccHeating && duringOccCooling == other.duringOccCooling;
+  }
+#endif
 };
 
 // template <size_t ROW_SIZE, size_t COL_SIZE>
