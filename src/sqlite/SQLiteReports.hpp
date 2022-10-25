@@ -5,6 +5,7 @@
 #include <ftxui/dom/elements.hpp>              // for Element
 
 #include <array>        // for array
+#include <compare>      // for operator<=>
 #include <filesystem>   // for path
 #include <optional>     // for optional
 #include <string>       // for string
@@ -19,13 +20,22 @@ struct UnmetHoursTableRow
 {
   static constexpr std::array<std::string_view, 4> headers = {"During Heating", "During Cooling", "During Occupied Heating",
                                                               "During Occupied Cooling"};
-  UnmetHoursTableRow(std::string t_zoneName, std::array<double, 4>& vals)
+  UnmetHoursTableRow(std::string t_zoneName, const std::array<double, 4>& vals)
     : zoneName(std::move(t_zoneName)), duringHeating(vals[0]), duringCooling(vals[1]), duringOccHeating(vals[2]), duringOccCooling(vals[3]) {}
   std::string zoneName;
   double duringHeating;
   double duringCooling;
   double duringOccHeating;
   double duringOccCooling;
+
+#if __APPLE__
+  bool operator==(const UnmetHoursTableRow& other) const {
+    return zoneName == other.zoneName && duringHeating == other.duringHeating && duringCooling == other.duringCooling
+           && duringOccHeating == other.duringOccHeating && duringOccCooling == other.duringOccCooling;
+  }
+#else
+  auto operator<=>(const UnmetHoursTableRow&) const = default;
+#endif
 };
 
 // template <size_t ROW_SIZE, size_t COL_SIZE>

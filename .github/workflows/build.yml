@@ -43,20 +43,6 @@ jobs:
       with:
         qtifw-version: '4.x'
 
-    - name: Install conan
-      shell: bash
-      run: |
-          python --version
-          pip install conan
-          conan --version
-          echo "Enabling conan revisions and setting parallel_download"
-          conan config set general.revisions_enabled=True
-          conan config set general.parallel_download=8
-          conan profile new --detect default
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            conan profile update settings.compiler.libcxx=libstdc++11 default
-          fi;
-
     - name: Install deps
       shell: bash
       run: |
@@ -70,16 +56,22 @@ jobs:
           sudo apt update
           sudo apt -y -qq install ninja-build
 
+          echo CC=gcc-10 >> $GITHUB_ENV
+          echo CXX=g++-10 >> $GITHUB_ENV
+
           EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Linux-Ubuntu20.04-x86_64
           EPLUS_INSALLER_EXT=tar.gz
 
         elif [ "$RUNNER_OS" == "macOS" ]; then
           echo "Using brew to install ninja"
           brew install ninja
-          echo "Setting MACOSX_DEPLOYMENT_TARGET to 10.15"
-          echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> $GITHUB_ENV
+          echo "Setting MACOSX_DEPLOYMENT_TARGET to 12.6"
+          echo "MACOSX_DEPLOYMENT_TARGET=12.6" >> $GITHUB_ENV
           echo "Adding SDKROOT to GITHUB_ENV"
           echo "SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" >> $GITHUB_ENV
+
+          #echo CC=$(brew --prefix llvm@14)/bin/clang >> $GITHUB_ENV
+          #echo CXX=$(brew --prefix llvm@14)/bin/clang++  >> $GITHUB_ENV
 
           EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Darwin-macOS10.15-x86_64
           EPLUS_INSALLER_EXT=tar.gz
@@ -101,6 +93,20 @@ jobs:
         cmake -E tar xfz $EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
         echo "ENERGYPLUS_DIR=$(pwd)/$EPLUS_INSTALLER_NAME" >> $GITHUB_ENV
 
+    - name: Install conan
+      shell: bash
+      run: |
+          python --version
+          pip install conan
+          conan --version
+          echo "Enabling conan revisions and setting parallel_download"
+          conan config set general.revisions_enabled=True
+          conan config set general.parallel_download=8
+          conan profile new --detect default
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            conan profile update settings.compiler.libcxx=libstdc++11 default
+          fi;
+
     - name: conan install CMakeToolChain
       # On windows, gotta specify we want generator=Ninja
       run: |
@@ -112,7 +118,7 @@ jobs:
       shell: bash
       run: |
         set -x
-        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release \
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING:BOOL=ON \
               -Denergyplus_DIR=${{ env.ENERGYPLUS_DIR }} \
               -DCPACK_BINARY_IFW:BOOL=ON  -DCPACK_BINARY_TGZ:BOOL=ON \
               -DCPACK_BINARY_RPM:BOOL=OFF -DCPACK_BINARY_DEB:BOOL=OFF -DCPACK_BINARY_NSIS:BOOL=OFF \
@@ -127,13 +133,19 @@ jobs:
       run: |
         echo "Using vcvarsall to initialize the development environment"
         call vcvarsall.bat x64
-        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release ^
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_BUILD_TYPE:STRING=Release -DBUILD_TESTING:BOOL=ON ^
               -Denergyplus_DIR=${{ env.ENERGYPLUS_DIR }} ^
               -DCPACK_BINARY_IFW:BOOL=ON  -DCPACK_BINARY_TGZ:BOOL=ON ^
               -DCPACK_BINARY_RPM:BOOL=OFF -DCPACK_BINARY_DEB:BOOL=OFF -DCPACK_BINARY_NSIS:BOOL=OFF ^
               -DCPACK_BINARY_STGZ:BOOL=OFF -DCPACK_BINARY_TBZ2:BOOL=OFF -DCPACK_BINARY_TXZ:BOOL=OFF -DCPACK_BINARY_TZ:BOOL=OFF ^
               ../
         ninja package
+
+    - name: Run Tests
+      shell: bash
+      working-directory: ./build
+      run: |
+        ctest --output-on-failure
 
     - name: Archive binary artifacts
       uses: actions/upload-artifact@v3
