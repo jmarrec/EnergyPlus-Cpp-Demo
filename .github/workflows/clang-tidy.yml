@@ -55,7 +55,7 @@ jobs:
       shell: bash
       working-directory: ./build
       run: |
-        run-clang-tidy-14 -config-file=../.clang-tidy -fix -format -extra-arg=-Wno-unknown-warning-option
+        run-clang-tidy-14 -fix -format -extra-arg=-Wno-unknown-warning-option
 
         # clang-tidy will auto correct files so prepare the diff and use this as artifact
         git diff > clang_tidy.patch
