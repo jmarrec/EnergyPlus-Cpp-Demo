@@ -43,20 +43,6 @@ jobs:
       with:
         qtifw-version: '4.x'
 
-    - name: Install conan
-      shell: bash
-      run: |
-          python --version
-          pip install conan
-          conan --version
-          echo "Enabling conan revisions and setting parallel_download"
-          conan config set general.revisions_enabled=True
-          conan config set general.parallel_download=8
-          conan profile new --detect default
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            conan profile update settings.compiler.libcxx=libstdc++11 default
-          fi;
-
     - name: Install deps
       shell: bash
       run: |
@@ -84,6 +70,9 @@ jobs:
           echo "Adding SDKROOT to GITHUB_ENV"
           echo "SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" >> $GITHUB_ENV
 
+          echo CC=$(brew --prefix llvm@14)/bin/clang >> $GITHUB_ENV
+          echo CXX=$(brew --prefix llvm@14)/bin/clang++  >> $GITHUB_ENV
+
           EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Darwin-macOS10.15-x86_64
           EPLUS_INSALLER_EXT=tar.gz
 
@@ -103,6 +92,20 @@ jobs:
         curl -L -O ${{ env.ENERGYPLUS_RELEASE_ENDPOINT }}/$EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
         cmake -E tar xfz $EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
         echo "ENERGYPLUS_DIR=$(pwd)/$EPLUS_INSTALLER_NAME" >> $GITHUB_ENV
+
+    - name: Install conan
+      shell: bash
+      run: |
+          python --version
+          pip install conan
+          conan --version
+          echo "Enabling conan revisions and setting parallel_download"
+          conan config set general.revisions_enabled=True
+          conan config set general.parallel_download=8
+          conan profile new --detect default
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            conan profile update settings.compiler.libcxx=libstdc++11 default
+          fi;
 
     - name: conan install CMakeToolChain
       # On windows, gotta specify we want generator=Ninja
