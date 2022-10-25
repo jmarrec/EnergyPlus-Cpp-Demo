@@ -693,7 +693,7 @@ TEST(MainComponent, MainComponent_SqlTab) {
   // This isn't an interactive screen, so recreate it
   ftxui::Screen screen(90, 50);
   Render(screen, main_component.Render());
-  std::string screenStr = screen.ToString();
+  std::string const screenStr = screen.ToString();
 
   // EnergyPlus-Cpp-Demo         │Stdout│eplusout.err│SQL Reports│About│1/5│           │← Quit
   // ────────────────────────────┴──────┴────────────┴───────────┴─────┴───┴───────────┴───────
