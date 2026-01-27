@@ -10,7 +10,7 @@ on:
     branches: [ main ]
 
 env:
-  ENERGYPLUS_RELEASE_ENDPOINT: https://github.com/jmarrec/EnergyPlus/releases/download/v22.2.0-export
+  ENERGYPLUS_RELEASE_ENDPOINT: https://github.com/NatLabRockies/EnergyPlus/releases/download/v25.2.0
 
 jobs:
   build:
@@ -19,7 +19,7 @@ jobs:
       # fail-fast: Default is true, switch to false to allow one platform to fail and still run others
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-latest, windows-latest]
+        os: [ubuntu-24.04, macos-latest, windows-latest]
         include:
         - os: ubuntu-20.04
           PLATFORM_NAME: Linux
@@ -32,16 +32,16 @@ jobs:
           BINARY_EXT: exe
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@v6
       with:
-        python-version: '3.8'
+        python-version: '3.12'
 
     - name: Setup QtIFW 4.x
       uses: jmarrec/setup-qtifw@v1
       with:
-        qtifw-version: '4.x'
+        qtifw-version: '4.8.1'
 
     - name: Install deps
       shell: bash
@@ -59,8 +59,8 @@ jobs:
           echo CC=gcc-10 >> $GITHUB_ENV
           echo CXX=g++-10 >> $GITHUB_ENV
 
-          EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Linux-Ubuntu20.04-x86_64
-          EPLUS_INSALLER_EXT=tar.gz
+          EPLUS_INSTALLER_NAME=EnergyPlus-25.2.0-cf7368216c-Linux-Ubuntu24.04-x86_64
+          EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Linux-Ubuntu24.04-x86_64
 
         elif [ "$RUNNER_OS" == "macOS" ]; then
           echo "Using brew to install ninja"
@@ -73,7 +73,7 @@ jobs:
           #echo CC=$(brew --prefix llvm@14)/bin/clang >> $GITHUB_ENV
           #echo CXX=$(brew --prefix llvm@14)/bin/clang++  >> $GITHUB_ENV
 
-          EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Darwin-macOS10.15-x86_64
+          EPLUS_INSTALLER_NAME=EnergyPlus-25.2.0-cf7368216c-Darwin-macOS12.1-x86_64
           EPLUS_INSALLER_EXT=tar.gz
 
         elif [ "$RUNNER_OS" == "Windows" ]; then
@@ -85,7 +85,7 @@ jobs:
           # add folder containing vcvarsall.bat
           echo "$MSVC_DIR\VC\Auxiliary\Build" >> $GITHUB_PATH
 
-          EPLUS_INSTALLER_NAME=EnergyPlus-22.2.0-23dcfc8220-Windows-x86_64
+          EPLUS_INSTALLER_NAME=EnergyPlus-25.2.0-cf7368216c-Windows-x86_64
           EPLUS_INSALLER_EXT=zip
         fi;
 
@@ -93,24 +93,57 @@ jobs:
         cmake -E tar xfz $EPLUS_INSTALLER_NAME.$EPLUS_INSALLER_EXT
         echo "ENERGYPLUS_DIR=$(pwd)/$EPLUS_INSTALLER_NAME" >> $GITHUB_ENV
 
-    - name: Install conan
+    - name: Install Conan
       shell: bash
       run: |
-          python --version
-          pip install conan
-          conan --version
-          echo "Enabling conan revisions and setting parallel_download"
-          conan config set general.revisions_enabled=True
-          conan config set general.parallel_download=8
-          conan profile new --detect default
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            conan profile update settings.compiler.libcxx=libstdc++11 default
-          fi;
+        begin_group() { echo -e "::group::\033[93m$1\033[0m"; }
+
+        set -x
+        begin_group "Install conan 2"
+        python --version
+        pip install 'conan>2'
+        conan --version
+        echo -e "::endgroup::"
+
+        begin_group "Default profile"
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          DIR_SEP="\\"
+        else
+          DIR_SEP="/"
+        fi
+        echo DIR_SEP=$DIR_SEP >> $GITHUB_ENV
+
+        export CONAN_USER_HOME="${{ github.workspace }}${DIR_SEP}conan-cache"
+        echo CONAN_USER_HOME="$CONAN_USER_HOME" >> $GITHUB_ENV
+
+        export CONAN_HOME="$CONAN_USER_HOME${DIR_SEP}.conan2"
+        echo CONAN_HOME="$CONAN_HOME" >> $GITHUB_ENV
+
+        export CONAN_PROFILE_DEFAULT="$CONAN_HOME${DIR_SEP}profiles${DIR_SEP}default"
+        echo CONAN_PROFILE_DEFAULT="$CONAN_PROFILE_DEFAULT" >> $GITHUB_ENV
+
+        conan profile detect --force --name default
+        cat $CONAN_PROFILE_DEFAULT
+        # Mac has the FreeBSD flavor of sed and MUST take a backup suffix...
+        sed -i.bak 's/cppstd=.*$/cppstd=20/g' $CONAN_PROFILE_DEFAULT
+        sed -i.bak 's/build_type=.*$/build_type=${{ env.BUILD_TYPE }}/g' $CONAN_PROFILE_DEFAULT
+        # Windows only
+        sed -i.bak 's/compiler.runtime_type=.*$/compiler.runtime_type=${{ env.BUILD_TYPE }}/g' $CONAN_PROFILE_DEFAULT
+        rm -Rf $CONAN_PROFILE_DEFAULT.bak || true
+        conan profile show
+        echo -e "::endgroup::"
+
+        begin_group "Global.conf"
+        echo "core:non_interactive = True" >> $CONAN_HOME/global.conf
+        echo "core.download:parallel = {{os.cpu_count() - 2}}" >> $CONAN_HOME/global.conf
+        echo "core.sources:download_cache = $CONAN_USER_HOME/.conan-download-cache" >> $CONAN_HOME/global.conf
+        cat $CONAN_HOME/global.conf
+        echo -e "::endgroup::"
 
     - name: conan install CMakeToolChain
       # On windows, gotta specify we want generator=Ninja
       run: |
-        conan install . -pr:b=default -b missing -if build/ -of build/ -c tools.cmake.cmaketoolchain:generator=Ninja
+        conan install . --output-folder=./build --build=missing -c tools.cmake.cmaketoolchain:generator=Ninja -s compiler.cppstd=20 -s build_type=Release
 
     - name: CMake configure and build (Unix)
       working-directory: ./build
@@ -148,13 +181,13 @@ jobs:
         ctest --output-on-failure
 
     - name: Archive binary artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       with:
           name: EnergyPlus-Cpp-Demo-${{ github.sha }}-${{ matrix.os }}.${{ matrix.BINARY_EXT }}
           path: build/_CPack_Packages/${{ matrix.PLATFORM_NAME }}/IFW/*.${{ matrix.BINARY_EXT }}
 
     - name: Archive TGZ artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       with:
           name: EnergyPlus-Cpp-Demo-${{ github.sha }}-${{ matrix.os }}.tar.gz
           path: build/_CPack_Packages/${{ matrix.PLATFORM_NAME }}/TGZ/*.tar.gz
