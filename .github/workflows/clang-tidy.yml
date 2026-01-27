@@ -7,34 +7,29 @@ on:
     branches: [ main ]
 
 env:
-  CC: /usr/bin/clang-14
-  CXX: /usr/bin/clang++-14
-  ENERGYPLUS_RELEASE_ENDPOINT: https://github.com/jmarrec/EnergyPlus/releases/download/v22.2.0-export
-  EPLUS_INSTALLER_NAME: EnergyPlus-22.2.0-23dcfc8220-Linux-Ubuntu20.04-x86_64
+  CC: /usr/bin/clang-18
+  CXX: /usr/bin/clang++-18
+  ENERGYPLUS_RELEASE_ENDPOINT: https://github.com/NatLabRockies/EnergyPlus/releases/download/v25.2.0
+  EPLUS_INSTALLER_NAME: EnergyPlus-25.2.0-cf7368216c-Linux-Ubuntu24.04-x86_64
   EPLUS_INSALLER_EXT: tar.gz
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
 
     - name: Install conan and dependencies
       shell: bash
       run: |
-          python --version
-          pip install conan
-          conan --version
-          echo "Enabling conan revisions and setting parallel_download"
-          conan config set general.revisions_enabled=True
-          conan config set general.parallel_download=8
-          conan profile new --detect default
-          conan profile update settings.compiler.libcxx=libstdc++11 default
-          echo "Using apt to install ninja"
-          sudo apt update
-          sudo apt -y -qq install ninja-build
-          echo "Conan install dependencies"
-          conan install . -pr:b=default -b missing -if build/ -of build/ -c tools.cmake.cmaketoolchain:generator=Ninja
+        python --version
+        pip install conan
+        conan --version
+        echo "Using apt to install ninja"
+        sudo apt update
+        sudo apt -y -qq install ninja-build
+        echo "Conan install dependencies"
+        conan install . --output-folder=./build --build=missing -c tools.cmake.cmaketoolchain:generator=Ninja -s compiler.cppstd=20 -s build_type=Release
 
     - name: Generate compile_commands.json
       shell: bash
@@ -55,7 +50,7 @@ jobs:
       shell: bash
       working-directory: ./build
       run: |
-        run-clang-tidy-14 -fix -format -extra-arg=-Wno-unknown-warning-option
+        run-clang-tidy-18 -fix -format -extra-arg=-Wno-unknown-warning-option
 
         # clang-tidy will auto correct files so prepare the diff and use this as artifact
         git diff > clang_tidy.patch
@@ -76,7 +71,7 @@ jobs:
 
     - name: Upload clang-tidy patch as artifact
       if: ${{ failure() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       with:
           name: EnergyPlus-Cpp-Demo-${{ github.sha }}-clang_tidy.patch
           path: clang_tidy.patch
