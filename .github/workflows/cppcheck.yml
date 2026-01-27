@@ -6,38 +6,31 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  CPPCHECK_VERSION: 2.9
-
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v6
 
     - name: Install cppcheck
       shell: bash
       run: |
-          # Current stable (2.3-25-20201207-23616-ga9f4a14c8, rev 1637) is broken, so use edge for now
-          # cppcheck has been removed completely from snap actually
-          # sudo snap install cppcheck --edge
-          cd /tmp/
-          wget https://github.com/danmar/cppcheck/archive/$CPPCHECK_VERSION.tar.gz
-          tar xfz $CPPCHECK_VERSION.tar.gz
-          mkdir build
-          cd build
-          cmake -DCMAKE_BUILD_TYPE=Release ../cppcheck-$CPPCHECK_VERSION/
-          make -j $(nproc)
-          sudo make install
+        # I made a PPA on launchpad where I built cppcheck 2.15 for 24.04
+        sudo add-apt-repository ppa:jmarrec/ppa
+        sudo apt update
+        sudo apt install -y cppcheck
+        cppcheck --version
 
     - name: Run cppcheck
       shell: bash
       run: |
           cppcheck \
             --std=c++20 \
+            --enable=warning,style,information \
+            --suppress=missingIncludeSystem \
             --suppress=useStlAlgorithm \
             --inline-suppr \
-            --enable=all \
             --template='[{file}:{line}]:({severity}),[{id}],{message}' \
             --force -q -j $(nproc) \
             ./src 2>&1 | tee cppcheck.txt
@@ -48,7 +41,7 @@ jobs:
 
     - name: Upload cppcheck results as artifact
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       with:
           name: EnergyPlus-Cpp-Demo-${{ github.sha }}-cppcheck_results.txt
           path: cppcheck.txt

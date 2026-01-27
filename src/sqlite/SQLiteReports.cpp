@@ -299,7 +299,7 @@ ftxui::Element RenderUnmetHours(const sql::SQLiteReports& report) {
   std::array<size_t, sql::UnmetHoursTableRow::headers.size() + 1> col_sizes{};
 
   col_sizes[0] = 20;
-  for (auto& tableRow : tableData) {
+  for (const auto& tableRow : tableData) {
     col_sizes[0] = std::max(col_sizes[0], tableRow.zoneName.size());
   }
 
@@ -361,7 +361,7 @@ ftxui::Element RenderEndUseByFuel(const sql::SQLiteReports& report) {
   col_sizes.resize(tableData.fuelNames.size() + 1);
 
   col_sizes[0] = 20;
-  for (auto& idx : tableData.endUseNames) {
+  for (const auto& idx : tableData.endUseNames) {
     col_sizes[0] = std::max(col_sizes[0], idx.size());
   }
 

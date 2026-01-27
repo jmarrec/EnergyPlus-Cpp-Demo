@@ -199,7 +199,7 @@ void MainComponent::ProcessErrorMessage(ErrorMessage&& errorMsg) {
     ++m_numWarnings;
   }
   if (errorMsg.error == EnergyPlus::Error::Severe) {
-    ++m_numWarnings;
+    ++m_numSeveres;
   }
   RegisterLogLevel(errorMsg.error);
   m_errors.emplace_back(errorMsg);
@@ -270,7 +270,7 @@ Element MainComponent::Render() {
       separator(),
       text(fmt::format("{} warnings", m_numWarnings)) | ((m_numWarnings > 0) ? color(Color::Yellow) : color(Color::GrayLight)),
       separator(),
-      text(fmt::format("{} severes", m_numSeveres)) | ((m_numWarnings > 0) ? color(Color::Red) : color(Color::GrayLight)),
+      text(fmt::format("{} severes", m_numSeveres)) | ((m_numSeveres > 0) ? color(Color::Red) : color(Color::GrayLight)),
 
     });
 
@@ -309,6 +309,8 @@ Element MainComponent::Render() {
         prevAllowed = true;
       } else if (m_error.error == EnergyPlus::Error::Continue && prevAllowed) {
         filtered_errorMsgs.push_back(&m_error);
+      } else {
+        prevAllowed = false;
       }
     }
 
