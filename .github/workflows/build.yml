@@ -71,7 +71,7 @@ jobs:
           #echo CC=$(brew --prefix llvm@14)/bin/clang >> $GITHUB_ENV
           #echo CXX=$(brew --prefix llvm@14)/bin/clang++  >> $GITHUB_ENV
 
-          EPLUS_INSTALLER_NAME=EnergyPlus-25.2.0-cf7368216c-Darwin-macOS12.1-x86_64
+          EPLUS_INSTALLER_NAME=EnergyPlus-25.2.0-cf7368216c-Darwin-macOS13-arm64
           EPLUS_INSALLER_EXT=tar.gz
 
         elif [ "$RUNNER_OS" == "Windows" ]; then
