@@ -84,8 +84,7 @@ class MainComponent : public ComponentBase
   std::filesystem::path m_outputDirectory;
 
   std::string m_clearResultsButtonText = "Clear Results";
-  Component m_clearResultsButton = Button(
-    &m_clearResultsButtonText, [this]() { this->clear_state(); }, ButtonOption::Simple());
+  Component m_clearResultsButton = Button(&m_clearResultsButtonText, [this]() { this->clear_state(); }, ButtonOption::Simple());
 
   std::shared_ptr<SQLiteComponent> m_sqlite_component = Make<SQLiteComponent>();
 };
