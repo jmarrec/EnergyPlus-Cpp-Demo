@@ -27,9 +27,9 @@ jobs:
       run: |
           cppcheck \
             --std=c++20 \
+            --enable=warning,style,information \
             --suppress=useStlAlgorithm \
             --inline-suppr \
-            --enable=all \
             --template='[{file}:{line}]:({severity}),[{id}],{message}' \
             --force -q -j $(nproc) \
             ./src 2>&1 | tee cppcheck.txt

@@ -25,6 +25,7 @@ jobs:
         python --version
         pip install conan
         conan --version
+        conan profile detect --force --name default
         echo "Using apt to install ninja"
         sudo apt update
         sudo apt -y -qq install ninja-build
