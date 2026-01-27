@@ -215,7 +215,7 @@ add_custom_command(
   PRE_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:energyplus::energyplusapi>" "$<TARGET_FILE_DIR:epcli>"
   # TODO: WORKAROUND
-  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.8.dylib>$<$<PLATFORM_ID:Linux>:libpython3.8.so.1.0>$<$<PLATFORM_ID:Windows>:python38.dll>" "$<TARGET_FILE_DIR:epcli>"
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.12.dylib>$<$<PLATFORM_ID:Linux>:libpython3.12.so.1.0>$<$<PLATFORM_ID:Windows>:python312.dll>" "$<TARGET_FILE_DIR:epcli>"
   # Example files to play with
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/ExampleFiles/1ZoneUncontrolled.idf" "$<TARGET_FILE_DIR:epcli>/in.idf"
   COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE_DIR:energyplus::energyplusapi>/WeatherData/USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw" "$<TARGET_FILE_DIR:epcli>/in.epw"
@@ -261,7 +261,7 @@ endif()
 
 get_target_property(LIBAPI energyplus::energyplusapi IMPORTED_LOCATION_RELEASE)
 
-install(FILES "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.8.dylib>$<$<PLATFORM_ID:Linux>:libpython3.8.so.1.0>$<$<PLATFORM_ID:Windows>:python38.dll>" DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
+install(FILES "$<TARGET_FILE_DIR:energyplus::energyplusapi>/$<$<PLATFORM_ID:Darwin>:libpython3.12.dylib>$<$<PLATFORM_ID:Linux>:libpython3.12.so.1.0>$<$<PLATFORM_ID:Windows>:python312.dll>" DESTINATION ${LIB_DESTINATION_DIR} COMPONENT "CLI")
 
 
 add_custom_target(genexdebug COMMAND ${CMAKE_COMMAND} -E echo "$<TARGET_FILE_NAME:energyplus::energyplusapi>")

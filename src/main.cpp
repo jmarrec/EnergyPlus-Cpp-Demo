@@ -60,7 +60,7 @@ int main(int argc, const char* argv[]) {
   // State of the application:
   bool modal_reload_shown = false;
 
-  fs::path filePath;
+  fs::path filePath("in.idf");
 
   // Avoid pointer arithmetics by using a vector (we convert to string anyways in the loop below, so it's better than using an extra span)
   std::vector<std::string> args(argv, argv + argc);
@@ -75,6 +75,12 @@ int main(int argc, const char* argv[]) {
       return 1;
     }
   }
+
+  if (!fs::is_regular_file(filePath)) {
+    fmt::print("No valid input file provided. Please provide an EnergyPlus input file as the last argument.\n");
+    return 1;
+  }
+
   fs::path outputDirectory(".");
   for (int i = 1; i < argc - 1; ++i) {
     const auto& arg = args[i];
