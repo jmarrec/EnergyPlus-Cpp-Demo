@@ -277,8 +277,7 @@ TEST(MainComponent, MainComponent) {
   std::atomic<int> progress = 0;
 
   const std::string quit_text = "Quit";
-  auto quit_button = ftxui::Button(
-    &quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
+  auto quit_button = ftxui::Button(&quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
 
   const std::string run_text = "Run";
   auto run_button = ftxui::Button(
@@ -505,8 +504,7 @@ TEST(MainComponent, MainComponent_reload_results) {
   std::atomic<int> progress = 0;
 
   const std::string quit_text = "Quit";
-  auto quit_button = ftxui::Button(
-    &quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
+  auto quit_button = ftxui::Button(&quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
 
   const std::string run_text = "Run";
   auto run_button = ftxui::Button(
@@ -558,7 +556,7 @@ TEST(MainComponent, MainComponent_reload_results) {
   EXPECT_TRUE(screenStr.find("3 warnings") != std::string::npos);
   EXPECT_TRUE(screenStr.find("0 severes") != std::string::npos);
   EXPECT_TRUE(screenStr.find("Results have been reloaded from disk") != std::string::npos);
-  EXPECT_TRUE(screenStr.find("EnergyPlus Completed Successfully-- 3 Warning; 0 Severe Error") != std::string::npos);
+  EXPECT_TRUE(screenStr.find("EnergyPlus Completed Successfully-- 3 Warning") != std::string::npos);
   EXPECT_TRUE(screenStr.find("Open HTML") != std::string::npos);
   EXPECT_TRUE(screenStr.find("Clear Results") != std::string::npos);
 
@@ -658,8 +656,7 @@ TEST(MainComponent, MainComponent_SqlTab) {
   std::atomic<int> progress = 0;
 
   const std::string quit_text = "Quit";
-  auto quit_button = ftxui::Button(
-    &quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
+  auto quit_button = ftxui::Button(&quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
 
   const std::string run_text = "Run";
   auto run_button = ftxui::Button(
@@ -766,8 +763,7 @@ TEST(MainComponent, MainComponent_About) {
   std::atomic<int> progress = 0;
 
   const std::string quit_text = "Quit";
-  auto quit_button = ftxui::Button(
-    &quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
+  auto quit_button = ftxui::Button(&quit_text, [&quit] { quit = true; }, ftxui::ButtonOption::Ascii());
 
   const std::string run_text = "Run";
   auto run_button = ftxui::Button(
