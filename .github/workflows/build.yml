@@ -68,8 +68,8 @@ jobs:
           echo "Adding SDKROOT to GITHUB_ENV"
           echo "SDKROOT=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX.sdk" >> $GITHUB_ENV
 
-          #echo CC=$(brew --prefix llvm@14)/bin/clang >> $GITHUB_ENV
-          #echo CXX=$(brew --prefix llvm@14)/bin/clang++  >> $GITHUB_ENV
+          #echo CC=$(brew --prefix llvm@18)/bin/clang >> $GITHUB_ENV
+          #echo CXX=$(brew --prefix llvm@18)/bin/clang++  >> $GITHUB_ENV
 
           EPLUS_INSTALLER_NAME=EnergyPlus-25.2.0-cf7368216c-Darwin-macOS13-arm64
           EPLUS_INSALLER_EXT=tar.gz
@@ -77,7 +77,7 @@ jobs:
         elif [ "$RUNNER_OS" == "Windows" ]; then
           choco install ninja
           # C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise
-          MSVC_DIR=$(cmd.exe /c "vswhere -products * -requires Microsoft.Component.MSBuild -property installationPath -latest")
+          MSVC_DIR=$(vswhere -products '*' -requires Microsoft.Component.MSBuild -property installationPath -latest)
           echo "Latest is: $MSVC_DIR"
           echo "MSVC_DIR=$MSVC_DIR" >> $GITHUB_ENV
           # add folder containing vcvarsall.bat
